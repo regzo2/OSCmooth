@@ -84,6 +84,9 @@ namespace OSCTools.OSCmooth
                     true
                 );
 
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+
                 if (_json != null)
                 {
                     if (GUILayout.Button
@@ -100,6 +103,8 @@ namespace OSCTools.OSCmooth
                     }
                 }
 
+                EditorGUILayout.EndHorizontal();
+
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
 
@@ -113,7 +118,10 @@ namespace OSCTools.OSCmooth
                     GUILayout.MaxWidth((float)Screen.width - 159f)
                 ))
                 {
-                    OSCmoothJSONUtil.SaveListToJSONFile(_smoothLayer);
+                    if (_json != null)
+                        OSCmoothJSONUtil.SaveListToJSONFile(_smoothLayer, AssetDatabase.GetAssetPath(_json));
+                    else OSCmoothJSONUtil.SaveListToJSONFile(_smoothLayer);
+                    AssetDatabase.Refresh();
                 }
 
                 EditorGUILayout.EndHorizontal();

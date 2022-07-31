@@ -139,16 +139,19 @@ namespace OSCTools.OSCmooth.Util
 
             string json = JsonUtility.ToJson(smoothLayer);
 
+            if (!File.Exists(filePath))
+            {
+                File.Create(filePath);
+            }
+
             StreamWriter writer = new StreamWriter(filePath);
             writer.Write(json);
+            writer.Close();
 
             Debug.Log("Saved JSON data to " + filePath);
         }
-        public static List<OSCmoothParameter> LoadListfromJSONAsset(string filePath)
+        public static List<OSCmoothParameter> LoadListfromJSONAsset(string json)
         {
-            StreamReader reader = new StreamReader(filePath);
-            string json = reader.ReadToEnd();
-
             OSCmoothLayer smoothLayer = JsonUtility.FromJson<OSCmoothLayer>(json);
 
             List<OSCmoothParameter> parameters = new List<OSCmoothParameter>(smoothLayer.parameters);

@@ -34,7 +34,7 @@ namespace OSCTools.OSCmooth.Types
 
     // For JSONUtil purposes
     [Serializable]
-    public class OSCmoothLayer
+    public class OSCmoothLayer 
     {
         public OSCmoothParameter[] parameters;
 

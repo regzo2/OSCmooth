@@ -33,7 +33,7 @@ namespace OSCTools.OSCmooth.Util
             return layer;
         }
 
-        public static AnimationClip[] CreateFloatSmootherAnimation(string paramName, string smoothSuffix, float initThreshold = 0, float finalThreshold = 1)
+        public static AnimationClip[] CreateFloatSmootherAnimation(string paramName, string smoothSuffix, string proxySuffix, float initThreshold = 0, float finalThreshold = 1, bool driveBase = false)
         {
             AnimationClip _animationClip1 = new AnimationClip();
             AnimationClip _animationClip2 = new AnimationClip();
@@ -41,19 +41,19 @@ namespace OSCTools.OSCmooth.Util
             AnimationCurve _curve1 = new AnimationCurve(new Keyframe(0.0f, initThreshold));
             AnimationCurve _curve2 = new AnimationCurve(new Keyframe(0.0f, finalThreshold));
 
-            _animationClip1.SetCurve("", typeof(Animator), paramName, _curve1);
-            _animationClip2.SetCurve("", typeof(Animator), paramName, _curve2);
+            _animationClip1.SetCurve("", typeof(Animator), driveBase ? paramName : paramName + proxySuffix, _curve1);
+            _animationClip2.SetCurve("", typeof(Animator), driveBase ? paramName : paramName + proxySuffix, _curve2);
 
-            if (!Directory.Exists("Assets/VRCFaceTracking/Generated/Anims/"))
+            if (!Directory.Exists("Assets/OSCmooth/Generated/Anims/"))
             {
-                Directory.CreateDirectory("Assets/VRCFaceTracking/Generated/Anims/");
+                Directory.CreateDirectory("Assets/OSCmooth/Generated/Anims/");
             }
 
             string[] guid = (AssetDatabase.FindAssets(paramName + initThreshold + "Smoother.anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClip1, "Assets/VRCFaceTracking/Generated/Anims/" + paramName + initThreshold + smoothSuffix + ".anim");
+                AssetDatabase.CreateAsset(_animationClip1, "Assets/OSCmooth/Generated/Anims/" + paramName + initThreshold + smoothSuffix + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -66,7 +66,7 @@ namespace OSCTools.OSCmooth.Util
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClip2, "Assets/VRCFaceTracking/Generated/Anims/" + paramName + finalThreshold + smoothSuffix + ".anim");
+                AssetDatabase.CreateAsset(_animationClip2, "Assets/OSCmooth/Generated/Anims/" + paramName + finalThreshold + smoothSuffix + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -111,7 +111,7 @@ namespace OSCTools.OSCmooth.Util
             }; ;
 
             // Create smoothing anims
-            AnimationClip[] driverAnims = AnimUtil.CreateFloatSmootherAnimation(paramName + proxySuffix, paramName + smoothnessSuffix, -1f);
+            AnimationClip[] driverAnims = AnimUtil.CreateFloatSmootherAnimation(paramName, smoothnessSuffix, proxySuffix, -1f);
 
             rootTree.AddChild(falseTree, 0);
             rootTree.AddChild(trueTree, 1);
@@ -127,35 +127,6 @@ namespace OSCTools.OSCmooth.Util
             AssetDatabase.AddObjectToAsset(trueTree, AssetDatabase.GetAssetPath(stateMachine));
 
             return rootTree;
-        }
-    }
-
-    public class OSCmoothJSONUtil
-    {
-
-        public static void SaveListToJSONFile(List<OSCmoothParameter> parameters, string filePath = "Assets/OSCmooth/Editor/Resources/OSCmoothConfig.txt")
-        {
-            OSCmoothLayer smoothLayer = new OSCmoothLayer(parameters.ToArray());
-
-            string json = JsonUtility.ToJson(smoothLayer);
-
-            if (!File.Exists(filePath))
-            {
-                File.Create(filePath);
-            }
-
-            StreamWriter writer = new StreamWriter(filePath);
-            writer.Write(json);
-            writer.Close();
-
-            Debug.Log("Saved JSON data to " + filePath);
-        }
-        public static List<OSCmoothParameter> LoadListfromJSONAsset(string json)
-        {
-            OSCmoothLayer smoothLayer = JsonUtility.FromJson<OSCmoothLayer>(json);
-
-            List<OSCmoothParameter> parameters = new List<OSCmoothParameter>(smoothLayer.parameters);
-            return parameters;
         }
     }
 }

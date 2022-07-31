@@ -6,6 +6,7 @@ using VRC.SDK3.Avatars.Components;
 using OSCTools.OSCmooth.Animation;
 using OSCTools.OSCmooth.Types;
 using OSCTools.OSCmooth.Util;
+using System.IO;
 
 namespace OSCTools.OSCmooth
 {
@@ -13,15 +14,8 @@ namespace OSCTools.OSCmooth
     {
         private VRCAvatarDescriptor _avDescriptor;
         private AnimatorController _animatorController;
-
-        [SerializeField]
-        private List<OSCmoothParameter> _smoothLayer = new List<OSCmoothParameter>();
-
         private int _layerSelect = 4;
-
-        private TextAsset _json;
-        private string _configExportName;
-
+        private OSCmoothLayer _parameterAsset;
         private bool _showParameters;
         private Vector2 paramMenuScroll;
 
@@ -71,7 +65,7 @@ namespace OSCTools.OSCmooth
 
                 EditorGUILayout.Space(10f);
 
-                _json = (TextAsset)EditorGUILayout.ObjectField
+                _parameterAsset = (OSCmoothLayer)EditorGUILayout.ObjectField
                 (
                     new GUIContent
                     (
@@ -79,29 +73,16 @@ namespace OSCTools.OSCmooth
                         "The VRC Avatar that will have the smoothing animation layers set up on. " +
                         "The Avatar must have a VRCAvatarDescriptor to show up in this field."
                     ),
-                    _json,
-                    typeof(TextAsset),
-                    true
+                    _parameterAsset,
+                    typeof(OSCmoothLayer),
+                    false
                 );
 
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
 
-                if (_json != null)
-                {
-                    if (GUILayout.Button
-                    (
-                        new GUIContent
-                        (
-                            "Load Config",
-                            "Imports an existing Parameter configuration file."
-                        ),
-                        GUILayout.MaxWidth((float)Screen.width - 159f)
-                    ))
-                    {
-                        _smoothLayer = OSCmoothJSONUtil.LoadListfromJSONAsset(_json.text);
-                    }
-                }
+                if (_parameterAsset == null)
+                    _parameterAsset = ScriptableObject.CreateInstance<OSCmoothLayer>();
 
                 EditorGUILayout.EndHorizontal();
 
@@ -118,9 +99,10 @@ namespace OSCTools.OSCmooth
                     GUILayout.MaxWidth((float)Screen.width - 159f)
                 ))
                 {
-                    if (_json != null)
-                        OSCmoothJSONUtil.SaveListToJSONFile(_smoothLayer, AssetDatabase.GetAssetPath(_json));
-                    else OSCmoothJSONUtil.SaveListToJSONFile(_smoothLayer);
+                    if (AssetDatabase.GetAssetPath(_parameterAsset) == string.Empty)
+                        AssetDatabase.CreateAsset(_parameterAsset, EditorUtility.SaveFilePanelInProject("Save OSCmooth Configuration", "OSCmoothConfig", "asset", ""));
+
+                    AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
                 }
 
@@ -135,9 +117,9 @@ namespace OSCTools.OSCmooth
                 EditorGUI.indentLevel = 1;
 
                 paramMenuScroll = EditorGUILayout.BeginScrollView(paramMenuScroll, GUILayout.MaxWidth(512));
-                if (_showParameters)
+                if (_showParameters && _parameterAsset != null)
                 {                    
-                    foreach (OSCmoothParameter layer in _smoothLayer)
+                    foreach (OSCmoothParameter layer in _parameterAsset.parameters)
                     {
                         EditorGUI.indentLevel = 2;
                         layer.isVisible = EditorGUILayout.Foldout(layer.isVisible, layer.paramName);
@@ -228,7 +210,7 @@ namespace OSCTools.OSCmooth
                                 GUILayout.MaxWidth(256)
                             ))
                             {
-                                _smoothLayer.Remove(layer);
+                                _parameterAsset.parameters.Remove(layer);
                             }
 
                             GUILayout.FlexibleSpace();
@@ -254,7 +236,8 @@ namespace OSCTools.OSCmooth
                     GUILayout.MaxWidth(256)
                 ))
                 {
-                    _smoothLayer.Add(new OSCmoothParameter());
+                    OSCmoothParameter param = new OSCmoothParameter();
+                    _parameterAsset.parameters.Add(param);
                 }
 
                 GUILayout.FlexibleSpace();
@@ -279,7 +262,7 @@ namespace OSCTools.OSCmooth
                     OSCmoothAnimationHandler animHandler = new OSCmoothAnimationHandler();
 
                     animHandler.animatorController = _animatorController;
-                    animHandler.smoothLayer = _smoothLayer;
+                    animHandler.parameters = _parameterAsset.parameters;
 
                     animHandler.CreateSmoothAnimationLayer();
                 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace OSCTools.OSCmooth.Types
 {
@@ -32,13 +34,16 @@ namespace OSCTools.OSCmooth.Types
         }
     }
 
-    // For JSONUtil purposes
     [Serializable]
-    public class OSCmoothLayer 
+    public class OSCmoothLayer : ScriptableObject
     {
-        public OSCmoothParameter[] parameters;
+        public List<OSCmoothParameter> parameters;
 
-        public OSCmoothLayer(OSCmoothParameter[] parameters)
+        public OSCmoothLayer() 
+        {
+            parameters = new List<OSCmoothParameter>();
+        }
+        public OSCmoothLayer(List<OSCmoothParameter> parameters)
         {
             this.parameters = parameters;
         }

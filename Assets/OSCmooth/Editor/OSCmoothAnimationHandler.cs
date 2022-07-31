@@ -46,8 +46,8 @@ namespace OSCTools.OSCmooth.Animation
 
             ParameterUtil.CheckAndCreateParameter("isLocal", animatorController, AnimatorControllerParameterType.Bool);
 
-            toRemoteState.AddCondition(AnimatorConditionMode.IfNot, 0, "isLocal");
-            toLocalState.AddCondition(AnimatorConditionMode.If, 0, "isLocal");
+            toRemoteState.AddCondition(AnimatorConditionMode.IfNot, 0, "IsLocal");
+            toLocalState.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
 
             // Creating BlendTree objects to better customize them in the AC Editor
             var basisLocalBlendTree = new BlendTree()

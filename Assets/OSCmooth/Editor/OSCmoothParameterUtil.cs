@@ -185,6 +185,10 @@ namespace OSCTools.OSCmooth.Util
 
                 if (animatorController.parameters[j].name == paramName)
                 {
+                    animatorController.parameters[j].defaultFloat = (float)defaultVal;
+                    animatorController.parameters[j].defaultInt = (int)defaultVal;
+                    animatorController.parameters[j].defaultBool = Convert.ToBoolean(defaultVal);
+
                     break;
                 }
 

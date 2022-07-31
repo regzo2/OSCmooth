@@ -44,7 +44,7 @@ namespace OSCTools.OSCmooth.Animation
             toRemoteState.duration = 0;
             toLocalState.duration = 0;
 
-            ParameterUtil.CheckAndCreateParameter("isLocal", animatorController, AnimatorControllerParameterType.Bool);
+            ParameterUtil.CheckAndCreateParameter("IsLocal", animatorController, AnimatorControllerParameterType.Bool);
 
             toRemoteState.AddCondition(AnimatorConditionMode.IfNot, 0, "IsLocal");
             toLocalState.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");

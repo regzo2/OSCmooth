@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using OSCTools.OSCmooth.Util;
+using OSCTools.OSCmooth.Types;
 
 namespace OSCTools.OSCmooth.Animation
 {

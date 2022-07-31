@@ -33,7 +33,7 @@ namespace OSCTools.OSCmooth.Animation
 
             AnimatorState[] state = new AnimatorState[2];
             state[0] = animLayer.stateMachine.AddState("OSCmooth_Local", new Vector3(30, 170, 0));
-            state[1] = animLayer.stateMachine.AddState("OSCmooth_Net", new Vector3(30, 170 + 60, 0));
+            state[1] = animLayer.stateMachine.AddState("OSCmooth_Remote", new Vector3(30, 170 + 60, 0));
 
             var toRemoteState = state[0].AddTransition(state[1]);
             var toLocalState = state[1].AddTransition(state[0]);
@@ -77,14 +77,14 @@ namespace OSCTools.OSCmooth.Animation
                 localChildMotion.Add(new ChildMotion 
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.localSmoothness, smoothLayer.paramName),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.localSmoothness, smoothLayer.paramName, smoothLayer.smoothName, "Local"),
                     timeScale = 1
                 });
 
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.remoteSmoothness, smoothLayer.paramName),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.remoteSmoothness, smoothLayer.paramName, smoothLayer.smoothName, "Remote"),
                     timeScale = 1,
                 });
             }

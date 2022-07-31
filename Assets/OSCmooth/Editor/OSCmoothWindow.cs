@@ -136,18 +136,37 @@ namespace OSCTools.OSCmooth
 
                         if (layer.isVisible)
                         {
-                            EditorGUIUtility.labelWidth = 60;
+                            EditorGUIUtility.labelWidth = 200;
 
                             layer.paramName = EditorGUILayout.TextField
                             (
                                 new GUIContent
                                 (
-                                    "",
+                                    "Parameter to smooth",
                                     "The specific float parameter that will have the smoothness layer have applied to."
                                 ),
                                 layer.paramName
                             );
+
                             EditorGUILayout.BeginHorizontal();
+
+
+                            EditorGUIUtility.labelWidth = 200;
+
+                            layer.smoothName = EditorGUILayout.TextField
+                            (
+                                new GUIContent
+                                (
+                                    "Smoother Name",
+                                    "The float smoother name"
+                                ),
+                                layer.smoothName 
+                            );
+
+
+                            EditorGUILayout.EndHorizontal();
+                            EditorGUILayout.BeginHorizontal();
+                            //GUILayout.FlexibleSpace();
 
                             EditorGUILayout.LabelField
                             (
@@ -179,7 +198,7 @@ namespace OSCTools.OSCmooth
                             (
                                 new GUIContent
                                 (
-                                    "Net",
+                                    "Remote",
                                     "How much % smoothness remote users will see when a parameter" +
                                     "changes value. Higher values represent more smoothness, and vice versa."
                                 ),

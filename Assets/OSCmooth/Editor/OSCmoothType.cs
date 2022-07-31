@@ -10,6 +10,7 @@ namespace OSCTools.OSCmooth.Types
         public float localSmoothness;
         public float remoteSmoothness;
         public string paramName;
+        public string smoothName;
 
         // This setting renames any instance of the base parameter
         // in the animator with the Proxy parameter. This is intended
@@ -27,6 +28,7 @@ namespace OSCTools.OSCmooth.Types
             localSmoothness = 0.5f;
             remoteSmoothness = 0.9f;
             paramName = "New Parameter";
+            smoothName = "OSCmoother";
             isVisible = false;
             flipInputOutput = false;
         }

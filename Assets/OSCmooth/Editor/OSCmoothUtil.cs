@@ -33,7 +33,7 @@ namespace OSCTools.OSCmooth.Util
             return layer;
         }
 
-        public static AnimationClip[] CreateFloatSmootherAnimation(string paramName, string smoothSuffix, float initThreshold = 0, float finalThreshold = 1)
+        public static AnimationClip[] CreateFloatSmootherAnimation(string paramName, string smoothnessSuffix, float initThreshold = 0, float finalThreshold = 1)
         {
             AnimationClip _animationClip1 = new AnimationClip();
             AnimationClip _animationClip2 = new AnimationClip();
@@ -53,7 +53,7 @@ namespace OSCTools.OSCmooth.Util
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClip1, "Assets/OSCmooth/Generated/Anims/" + paramName + initThreshold + smoothSuffix + ".anim");
+                AssetDatabase.CreateAsset(_animationClip1, "Assets/OSCmooth/Generated/Anims/" + paramName + initThreshold + smoothnessSuffix + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -62,11 +62,11 @@ namespace OSCTools.OSCmooth.Util
                 _animationClip1 = (AnimationClip)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid[0]), typeof(AnimationClip));
             }
 
-            guid = (AssetDatabase.FindAssets(paramName + finalThreshold + smoothSuffix + ".anim"));
+            guid = (AssetDatabase.FindAssets(paramName + finalThreshold + smoothnessSuffix + ".anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClip2, "Assets/OSCmooth/Generated/Anims/" + paramName + finalThreshold + smoothSuffix + ".anim");
+                AssetDatabase.CreateAsset(_animationClip2, "Assets/OSCmooth/Generated/Anims/" + paramName + finalThreshold + smoothnessSuffix + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -78,9 +78,9 @@ namespace OSCTools.OSCmooth.Util
             return new AnimationClip[] { _animationClip1, _animationClip2 };
         }
 
-        public static BlendTree CreateSmoothingBlendTree(AnimatorController animatorController, AnimatorStateMachine stateMachine, float smoothness, string paramName, string smoothnessSuffix = "Smoother", string proxySuffix = "Proxy")
+        public static BlendTree CreateSmoothingBlendTree(AnimatorController animatorController, AnimatorStateMachine stateMachine, float smoothness, string paramName, string smootherName, string netState = "Local", string smoothnessSuffix = "Smoother", string proxySuffix = "Proxy")
         {
-            AnimatorControllerParameter smootherParam = ParameterUtil.CheckAndCreateParameter(paramName + smoothnessSuffix, animatorController, AnimatorControllerParameterType.Float, smoothness);
+            AnimatorControllerParameter smootherParam = ParameterUtil.CheckAndCreateParameter(smootherName + netState, animatorController, AnimatorControllerParameterType.Float, smoothness);
             ParameterUtil.CheckAndCreateParameter(paramName + proxySuffix, animatorController, AnimatorControllerParameterType.Float);
             ParameterUtil.CheckAndCreateParameter(paramName, animatorController, AnimatorControllerParameterType.Float);
 
@@ -89,7 +89,7 @@ namespace OSCTools.OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = paramName + smoothnessSuffix,
+                blendParameter = smootherName + netState,
                 name = paramName + " Root",
                 useAutomaticThresholds = false
             };

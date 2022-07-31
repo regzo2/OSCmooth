@@ -2,6 +2,8 @@
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using OSCTools.OSCmooth.Types;
+using System.Collections.Generic;
 
 namespace OSCTools.OSCmooth.Util
 {
@@ -125,6 +127,32 @@ namespace OSCTools.OSCmooth.Util
             AssetDatabase.AddObjectToAsset(trueTree, AssetDatabase.GetAssetPath(stateMachine));
 
             return rootTree;
+        }
+    }
+
+    public class OSCmoothJSONUtil
+    {
+
+        public static void SaveListToJSONFile(List<OSCmoothParameter> parameters, string filePath = "Assets/OSCmooth/Editor/Resources/OSCmoothConfig.txt")
+        {
+            OSCmoothLayer smoothLayer = new OSCmoothLayer(parameters.ToArray());
+
+            string json = JsonUtility.ToJson(smoothLayer);
+
+            StreamWriter writer = new StreamWriter(filePath);
+            writer.Write(json);
+
+            Debug.Log("Saved JSON data to " + filePath);
+        }
+        public static List<OSCmoothParameter> LoadListfromJSONAsset(string filePath)
+        {
+            StreamReader reader = new StreamReader(filePath);
+            string json = reader.ReadToEnd();
+
+            OSCmoothLayer smoothLayer = JsonUtility.FromJson<OSCmoothLayer>(json);
+
+            List<OSCmoothParameter> parameters = new List<OSCmoothParameter>(smoothLayer.parameters);
+            return parameters;
         }
     }
 }

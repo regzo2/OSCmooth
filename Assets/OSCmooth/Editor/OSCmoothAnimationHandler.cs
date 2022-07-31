@@ -10,10 +10,10 @@ namespace OSCTools.OSCmooth.Animation
     public class OSCmoothAnimationHandler
     {
         public AnimatorController animatorController;
-        public List<OSCmoothLayer> smoothLayer;
+        public List<OSCmoothParameter> smoothLayer;
 
         public OSCmoothAnimationHandler() { }
-        public OSCmoothAnimationHandler(List<OSCmoothLayer> smoothLayer, AnimatorController animatorController)
+        public OSCmoothAnimationHandler(List<OSCmoothParameter> smoothLayer, AnimatorController animatorController)
         {
             this.smoothLayer = smoothLayer;
             this.animatorController = animatorController;
@@ -51,9 +51,8 @@ namespace OSCTools.OSCmooth.Animation
                 hideFlags = HideFlags.HideInHierarchy,
                 name = "Local",
                 useAutomaticThresholds = false
+                
             };
-            state[0].motion = basisLocalBlendTree;
-            AssetDatabase.AddObjectToAsset(basisLocalBlendTree, AssetDatabase.GetAssetPath(animLayer.stateMachine));
 
             var basisRemoteBlendTree = new BlendTree()
             {
@@ -70,18 +69,28 @@ namespace OSCTools.OSCmooth.Animation
 
             ParameterUtil.CheckAndCreateParameter("1Set", animatorController, AnimatorControllerParameterType.Float, 1);
 
-            foreach (OSCmoothLayer smoothLayer in smoothLayer)
+            List<ChildMotion> localChildMotion = new List<ChildMotion>();
+            List<ChildMotion> remoteChildMotion = new List<ChildMotion>();
+
+            foreach (OSCmoothParameter smoothLayer in smoothLayer)
             {
-                basisLocalBlendTree.AddChild(AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.localSmoothness, smoothLayer.paramName));
-                basisRemoteBlendTree.AddChild(AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.remoteSmoothness, smoothLayer.paramName, "RemoteSmoother"));
+                localChildMotion.Add(new ChildMotion 
+                {
+                    directBlendParameter = "1Set",
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.localSmoothness, smoothLayer.paramName),
+                    timeScale = 1
+                });
+
+                remoteChildMotion.Add(new ChildMotion
+                {
+                    directBlendParameter = "1Set",
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.localSmoothness, smoothLayer.paramName),
+                    timeScale = 1,
+                });
             }
 
-            for(int i = 0; i < basisLocalBlendTree.children.Length; i++)
-            {
-                basisLocalBlendTree.children[i].directBlendParameter = "1Set";
-                basisRemoteBlendTree.children[i].directBlendParameter = "1Set";
-            }
+            basisLocalBlendTree.children = localChildMotion.ToArray();
+            basisRemoteBlendTree.children = remoteChildMotion.ToArray();
         }
     }
 }
-

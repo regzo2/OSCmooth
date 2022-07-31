@@ -1,6 +1,9 @@
-﻿namespace OSCTools.OSCmooth.Types
+﻿using System;
+
+namespace OSCTools.OSCmooth.Types
 {
-    public class OSCmoothLayer
+    [Serializable]
+    public class OSCmoothParameter
     {
 
         // for Animation creation purposes:
@@ -19,7 +22,7 @@
         // for EditorWindow purposes: This is intended to hide parameter settings.
         public bool isVisible;
 
-        public OSCmoothLayer()
+        public OSCmoothParameter()
         {
             localSmoothness = 0.5f;
             remoteSmoothness = 0.9f;
@@ -27,6 +30,18 @@
             isVisible = false;
             flipInputOutput = false;
         }
-    } 
+    }
+
+    // For JSONUtil purposes
+    [Serializable]
+    public class OSCmoothLayer
+    {
+        public OSCmoothParameter[] parameters;
+
+        public OSCmoothLayer(OSCmoothParameter[] parameters)
+        {
+            this.parameters = parameters;
+        }
+    }
 }
 

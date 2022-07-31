@@ -40,10 +40,10 @@ namespace OSCTools.OSCmooth.Animation
             toRemoteState.duration = 0;
             toLocalState.duration = 0;
 
-            ParameterUtil.CheckAndCreateParameter("isLocal", animatorController, AnimatorControllerParameterType.Bool);
+            ParameterUtil.CheckAndCreateParameter("IsLocal", animatorController, AnimatorControllerParameterType.Bool);
 
-            toRemoteState.AddCondition(AnimatorConditionMode.IfNot, 0, "isLocal");
-            toLocalState.AddCondition(AnimatorConditionMode.If, 0, "isLocal");
+            toRemoteState.AddCondition(AnimatorConditionMode.IfNot, 0, "IsLocal");
+            toLocalState.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
 
             var basisLocalBlendTree = new BlendTree()
             {
@@ -84,7 +84,7 @@ namespace OSCTools.OSCmooth.Animation
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.localSmoothness, smoothLayer.paramName),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, smoothLayer.remoteSmoothness, smoothLayer.paramName),
                     timeScale = 1,
                 });
             }

@@ -44,16 +44,16 @@ namespace OSCTools.OSCmooth.Util
             _animationClip1.SetCurve("", typeof(Animator), paramName, _curve1);
             _animationClip2.SetCurve("", typeof(Animator), paramName, _curve2);
 
-            if (!Directory.Exists("Assets/VRCFaceTracking/Generated/Anims/"))
+            if (!Directory.Exists("Assets/OSCmooth/Generated/Anims/"))
             {
-                Directory.CreateDirectory("Assets/VRCFaceTracking/Generated/Anims/");
+                Directory.CreateDirectory("Assets/OSCmooth/Generated/Anims/");
             }
 
             string[] guid = (AssetDatabase.FindAssets(paramName + initThreshold + "Smoother.anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClip1, "Assets/VRCFaceTracking/Generated/Anims/" + paramName + initThreshold + smoothSuffix + ".anim");
+                AssetDatabase.CreateAsset(_animationClip1, "Assets/OSCmooth/Generated/Anims/" + paramName + initThreshold + smoothSuffix + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -66,7 +66,7 @@ namespace OSCTools.OSCmooth.Util
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClip2, "Assets/VRCFaceTracking/Generated/Anims/" + paramName + finalThreshold + smoothSuffix + ".anim");
+                AssetDatabase.CreateAsset(_animationClip2, "Assets/OSCmooth/Generated/Anims/" + paramName + finalThreshold + smoothSuffix + ".anim");
                 AssetDatabase.SaveAssets();
             }
 

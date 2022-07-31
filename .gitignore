@@ -368,4 +368,4 @@ FodyWeavers.xsd
 *.csproj
 **/Temp
 *.sln
-**/VRCFaceTracking
+**/OSCmooth/Generated

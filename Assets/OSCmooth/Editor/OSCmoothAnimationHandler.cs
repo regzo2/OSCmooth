@@ -79,20 +79,20 @@ namespace OSCTools.OSCmooth.Animation
             {
                 if (p.convertToProxy)
                 {
-                    AnimUtil.RenameBlendTreeParameterInController(animatorController, p.paramName, p.paramName + "Proxy");
+                    AnimUtil.RenameBlendTreeParameterInController(animatorController, p.paramName, p.paramName + "OSCm_Proxy");
                 }
 
                 localChildMotion.Add(new ChildMotion 
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput, "OSCm_Smoother", "OSCm_Proxy"),
                     timeScale = 1
                 });
 
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, "SmootherRemote"),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, "OSCm_SmootherRemote", "OSCm_Proxy"),
                     timeScale = 1,
                 });
             }

@@ -35,6 +35,22 @@ namespace OSCTools.OSCmooth.Types
             convertToProxy = true;
             flipInputOutput = false;
         }
+        public OSCmoothParameter(string paramName)
+        {
+            this.paramName = paramName;
+            localSmoothness = 0.5f;
+            remoteSmoothness = 0.9f;
+            convertToProxy = true;
+            flipInputOutput = false;
+        }
+        public OSCmoothParameter(string paramName, float localSmoothness, float remoteSmoothness, bool convertToProxy, bool flipInputOutput)
+        {
+            this.paramName = paramName;
+            this.localSmoothness = 0.5f;
+            this.remoteSmoothness = 0.9f;
+            this.convertToProxy = convertToProxy;
+            this.flipInputOutput = flipInputOutput;
+        }
     }
 
     [Serializable]

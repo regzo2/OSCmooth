@@ -7,6 +7,7 @@ using OSCTools.OSCmooth.Animation;
 using OSCTools.OSCmooth.Types;
 using OSCTools.OSCmooth.Util;
 using System.IO;
+using System.Linq;
 
 namespace OSCTools.OSCmooth
 {
@@ -21,7 +22,12 @@ namespace OSCTools.OSCmooth
 
         readonly private string[] _animatorSelection = new string[]
         {
-            "Base","Additive","Gesture","Action","FX"
+            "Base", "Additive", "Gesture", "Action", "FX"
+        };
+
+        readonly private string[] oscmBlacklist = new string[]
+        {
+            "OSCm_", "1Set", "IsLocal"
         };
 
         [MenuItem("Tools/OSCmooth")]
@@ -110,6 +116,26 @@ namespace OSCTools.OSCmooth
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));
 
+                EditorGUILayout.Space();
+                if (GUILayout.Button
+                (
+                    new GUIContent
+                    (
+                        "Use Playable Layer Parameters",
+                        "Populates the parameter list with exising float parameters in the applied Playable Layer controller."
+                    )
+                ))
+                {
+                    _parameterAsset = ScriptableObject.CreateInstance<OSCmoothLayer>();
+
+                    foreach (AnimatorControllerParameter parameter in _animatorController.parameters)
+                    {
+                        if (parameter.type == AnimatorControllerParameterType.Float && !oscmBlacklist.Any(parameter.name.Contains))
+                        {
+                            _parameterAsset.parameters.Add(new OSCmoothParameter(parameter.name));
+                        }
+                    }
+                }
                 EditorGUILayout.Space();
 
                 _showParameters = EditorGUILayout.Foldout(_showParameters, "Parameter Configuration");

@@ -16,7 +16,7 @@ namespace OSCTools.OSCmooth
         private AnimatorController _animatorController;
         private int _layerSelect = 4;
         private OSCmoothLayer _parameterAsset;
-        private bool _showParameters;
+        private bool _showParameters = true;
         private Vector2 paramMenuScroll;
 
         readonly private string[] _animatorSelection = new string[]
@@ -216,6 +216,8 @@ namespace OSCTools.OSCmooth
                         }
                     }
                 }
+
+                EditorUtility.SetDirty(_parameterAsset);
 
                 EditorGUILayout.Space();
 

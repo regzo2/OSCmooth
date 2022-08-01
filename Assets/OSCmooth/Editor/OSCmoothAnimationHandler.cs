@@ -77,24 +77,24 @@ namespace OSCTools.OSCmooth.Animation
             // Go through each parameter and create each child to eventually stuff into the Direct BlendTrees. 
             foreach (OSCmoothParameter p in parameters)
             {
+                if (p.convertToProxy)
+                {
+                    AnimUtil.RenameBlendTreeParameterInController(animatorController, p.paramName, p.paramName + "Proxy");
+                }
+
                 localChildMotion.Add(new ChildMotion 
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput),
                     timeScale = 1
                 });
 
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, "SmootherRemote"),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, "SmootherRemote"),
                     timeScale = 1,
                 });
-
-                if (p.convertToProxy)
-                {
-                    ParameterUtil.FlipBaseAndProxyParameters(p.paramName, "Proxy", animatorController);
-                }
             }
 
             basisLocalBlendTree.children = localChildMotion.ToArray();

@@ -31,7 +31,8 @@ namespace OSCTools.OSCmooth.Types
         {
             localSmoothness = 0.5f;
             remoteSmoothness = 0.9f;
-            paramName = "New Parameter";
+            paramName = "NewParam";
+            convertToProxy = true;
             flipInputOutput = false;
         }
     }

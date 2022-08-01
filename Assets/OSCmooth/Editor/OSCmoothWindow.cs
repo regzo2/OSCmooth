@@ -29,7 +29,7 @@ namespace OSCTools.OSCmooth
         {
             var window = EditorWindow.GetWindow<OSCmoothWindow>("OSCmooth");
             window.maxSize = new Vector2(512, 1024);
-            window.minSize = new Vector2(256, 768);
+            window.minSize = new Vector2(368, 768);
             window.Show();
         }
 
@@ -116,7 +116,7 @@ namespace OSCTools.OSCmooth
 
                 EditorGUI.indentLevel = 1;
 
-                paramMenuScroll = EditorGUILayout.BeginScrollView(paramMenuScroll, GUILayout.MaxWidth(512));
+                paramMenuScroll = EditorGUILayout.BeginScrollView(paramMenuScroll);
                 if (_showParameters && _parameterAsset != null)
                 {                    
                     foreach (OSCmoothParameter layer in _parameterAsset.parameters)
@@ -124,9 +124,10 @@ namespace OSCTools.OSCmooth
                         EditorGUI.indentLevel = 2;
                         layer.isVisible = EditorGUILayout.Foldout(layer.isVisible, layer.paramName);
 
+                        EditorGUI.indentLevel = 4;
                         if (layer.isVisible)
                         {
-                            EditorGUIUtility.labelWidth = 60;
+                            EditorGUIUtility.labelWidth = 210;
 
                             layer.paramName = EditorGUILayout.TextField
                             (
@@ -137,7 +138,6 @@ namespace OSCTools.OSCmooth
                                 ),
                                 layer.paramName
                             );
-                            EditorGUILayout.BeginHorizontal();
 
                             EditorGUILayout.LabelField
                             (
@@ -148,56 +148,54 @@ namespace OSCTools.OSCmooth
                                 )
                             );
 
-                            EditorGUIUtility.labelWidth = 90;
+                            EditorGUI.indentLevel = 6;
+                            EditorGUIUtility.labelWidth = 240;
 
                             layer.localSmoothness = EditorGUILayout.FloatField
                             (
                                 new GUIContent
                                 (
-                                    "Local",
-                                    "How much % smoothness you (locally) will see when a parameter" +
+                                    "Local Smoothness",
+                                    "How much % smoothness you (locally) will see when a parameter " +
                                     "changes value. Higher values represent more smoothness, and vice versa."
                                 ),
-                                layer.localSmoothness,
-                                GUILayout.MaxWidth(130)
+                                layer.localSmoothness
                             );
-                            EditorGUILayout.EndHorizontal();
-                            EditorGUILayout.BeginHorizontal();
-                            GUILayout.FlexibleSpace();
 
                             layer.remoteSmoothness = EditorGUILayout.FloatField
                             (
                                 new GUIContent
                                 (
-                                    "Net",
-                                    "How much % smoothness remote users will see when a parameter" +
+                                    "Remote Smoothness",
+                                    "How much % smoothness remote users will see when a parameter " +
                                     "changes value. Higher values represent more smoothness, and vice versa."
                                 ),
-                                layer.remoteSmoothness, 
-                                GUILayout.MaxWidth(130)
+                                layer.remoteSmoothness
                             );
 
-                            EditorGUILayout.EndHorizontal();
+                            layer.convertToProxy = EditorGUILayout.Toggle
+                            (
+                                new GUIContent
+                                (
+                                    "Proxy Conversion",
+                                    "Automatically convert existing animations to use the Proxy (output) float."
+                                ),
+                                layer.convertToProxy
+                            );
 
-                            //layer.flipInputOutput = EditorGUILayout.Toggle
-                            //(
-                            //    new GUIContent
-                            //    (
-                            //        "Flip IO",
-                            //        "This setting will automatically switch out the provided base parameter in exising animations  " +
-                            //        "out with the generated Proxy parameter from this tool. This is useful if you're looking to " +
-                            //        "convert your existing animation setup initially.\n\nWARNING: This setting is " +
-                            //        "potentially very destructive to the animator, It would be recommended to back-" +
-                            //        "up the Animator before using this setting, as a precaution, or manually swap out " +
-                            //        "the animations to use the Proxy float."
-                            //    ),
-                            //    layer.flipInputOutput
-                            //);
+                            layer.flipInputOutput = EditorGUILayout.Toggle
+                            (
+                                new GUIContent
+                                (
+                                    "Flip Input/Output",
+                                    "Sets the Base parameter to be the output parameter from the smoother layer, and " +
+                                    "sets the Proxy parameter as the input driver parameter. Useful for apps that can " +
+                                    "drive the Proxy parameter like VRCFaceTracking binary parameters."
+                                ),
+                                layer.flipInputOutput
+                            );
 
-                            EditorGUI.indentLevel = 0;
-
-                            EditorGUILayout.Space();
-                            GUILayout.BeginHorizontal();
+                            EditorGUILayout.BeginHorizontal();
                             GUILayout.FlexibleSpace();
 
                             if (GUILayout.Button
@@ -207,22 +205,17 @@ namespace OSCTools.OSCmooth
                                     "Remove Parameter",
                                     "Removes specified parameter from smoothness creation."
                                 ),
-                                GUILayout.MaxWidth(256)
+                                GUILayout.MaxWidth((float)Screen.width - 70f)
                             ))
                             {
                                 _parameterAsset.parameters.Remove(layer);
                             }
 
-                            GUILayout.FlexibleSpace();
-                            GUILayout.EndHorizontal();
-
+                            EditorGUILayout.EndHorizontal();
                             EditorGUILayout.Space();
                         }
                     }
                 }
-
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
 
                 EditorGUILayout.Space();
 
@@ -232,21 +225,15 @@ namespace OSCTools.OSCmooth
                     (
                         "Add New Parameter",
                         "Adds a new Parameter configuration."
-                    ),
-                    GUILayout.MaxWidth(256)
+                    )
                 ))
                 {
                     OSCmoothParameter param = new OSCmoothParameter();
                     _parameterAsset.parameters.Add(param);
                 }
 
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
 
                 EditorGUILayout.EndScrollView();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
 
                 if (GUILayout.Button
                 (
@@ -256,7 +243,7 @@ namespace OSCTools.OSCmooth
                         "Creates a new Layer in the selected Animator Controller that will apply smoothing " +
                         "to the listed configured parameters."
                     ),
-                    GUILayout.MaxWidth(256)
+                    GUILayout.MaxWidth(Screen.width * .9f)
                 ))
                 {
                     OSCmoothAnimationHandler animHandler = new OSCmoothAnimationHandler();
@@ -267,8 +254,7 @@ namespace OSCTools.OSCmooth
                     animHandler.CreateSmoothAnimationLayer();
                 }
 
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
+                EditorGUILayout.Space(40);
             }
         }
     }

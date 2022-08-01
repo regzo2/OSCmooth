@@ -20,18 +20,11 @@ namespace OSCTools.OSCmooth.Animation
         }
         public void CreateSmoothAnimationLayer()
         {
+            AnimatorControllerLayer animLayer;
 
             // Looking for existing animation layer, and will delete it to replace with a new one. Will look into
             // creating a more thorough solution to much more effectively overwrite the existing layer for a future update.
-            for (int i = 0; i < animatorController.layers.Length; i++)
-            {
-                if (animatorController.layers[i].name == "_OSCmooth_Smoothing_Gen_")
-                {
-                    animatorController.RemoveLayer(i);
-                }
-            }
-
-            AnimatorControllerLayer animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Smoothing_Gen_", animatorController);
+            animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Smoothing_Gen_", animatorController);
 
             // Creating a Direct BlendTree that will hold all of the smooth driver animations. This is to effectively create a 'sublayer'
             // system within the Direct BlendTree to tidy up the animator base layers from bloating up visually.
@@ -53,7 +46,6 @@ namespace OSCTools.OSCmooth.Animation
             var basisLocalBlendTree = new BlendTree()
             {
                 blendType = BlendTreeType.Direct,
-                hideFlags = HideFlags.HideInHierarchy,
                 name = "Local",
                 useAutomaticThresholds = false
                 
@@ -62,7 +54,6 @@ namespace OSCTools.OSCmooth.Animation
             var basisRemoteBlendTree = new BlendTree()
             {
                 blendType = BlendTreeType.Direct,
-                hideFlags = HideFlags.HideInHierarchy,
                 name = "Remote",
                 useAutomaticThresholds = false
             };
@@ -81,21 +72,26 @@ namespace OSCTools.OSCmooth.Animation
             List<ChildMotion> remoteChildMotion = new List<ChildMotion>();
 
             // Go through each parameter and create each child to eventually stuff into the Direct BlendTrees. 
-            foreach (OSCmoothParameter parameter in parameters)
+            foreach (OSCmoothParameter p in parameters)
             {
                 localChildMotion.Add(new ChildMotion 
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, parameter.localSmoothness, parameter.paramName),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName),
                     timeScale = 1
                 });
 
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "1Set",
-                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, parameter.remoteSmoothness, parameter.paramName, "SmootherRemote"),
+                    motion = AnimUtil.CreateSmoothingBlendTree(animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, "SmootherRemote"),
                     timeScale = 1,
                 });
+
+                if (p.convertToProxy)
+                {
+                    ParameterUtil.FlipBaseAndProxyParameters(p.paramName, "Proxy", animatorController);
+                }
             }
 
             basisLocalBlendTree.children = localChildMotion.ToArray();

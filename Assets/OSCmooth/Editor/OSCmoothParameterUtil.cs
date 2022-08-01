@@ -167,36 +167,40 @@ namespace OSCTools.OSCmooth.Util
 
         public static AnimatorControllerParameter CheckAndCreateParameter(string paramName, AnimatorController animatorController, AnimatorControllerParameterType type, double defaultVal = 0)
         {
-            AnimatorControllerParameter param = new AnimatorControllerParameter();
+            AnimatorControllerParameter parameter = new AnimatorControllerParameter();
 
-            param.name = paramName;
-            param.type = type;
-            param.defaultFloat = (float)defaultVal;
-            param.defaultInt = (int)defaultVal;
-            param.defaultBool = Convert.ToBoolean(defaultVal);
-
-            AnimatorControllerParameterType _typeEnum = (AnimatorControllerParameterType)type;
+            parameter.name = paramName;
+            parameter.type = type;
+            parameter.defaultFloat = (float)defaultVal;
+            parameter.defaultInt = (int)defaultVal;
+            parameter.defaultBool = Convert.ToBoolean(defaultVal);
 
             if (animatorController.parameters.Length == 0)
-                animatorController.AddParameter(paramName, _typeEnum);
+                animatorController.AddParameter(paramName, type);
 
             for (int j = 0; j <= animatorController.parameters.Length - 1; j++)
             {
 
-                if (animatorController.parameters[j].name == paramName)
+                if (animatorController.parameters[j].name == parameter.name)
                 {
-                    animatorController.parameters[j].defaultFloat = (float)defaultVal;
-                    animatorController.parameters[j].defaultInt = (int)defaultVal;
-                    animatorController.parameters[j].defaultBool = Convert.ToBoolean(defaultVal);
-
+                    AnimatorControllerParameter[] parameters = animatorController.parameters;
+                    parameters[j] = parameter;
+                    animatorController.parameters = parameters;
                     break;
                 }
 
                 if (animatorController.parameters.Length - 1 == j)
-                    animatorController.AddParameter(param);
+                    animatorController.AddParameter(parameter);
             }
 
-            return param;
+            return parameter;
+        }
+
+        public static void FlipBaseAndProxyParameters(string paramName, string proxySuffix, AnimatorController animatorController)
+        {
+            List<AnimatorControllerParameter> parameters = new List<AnimatorControllerParameter>(animatorController.parameters);
+
+            animatorController.parameters = parameters.ToArray();
         }
     }
 }

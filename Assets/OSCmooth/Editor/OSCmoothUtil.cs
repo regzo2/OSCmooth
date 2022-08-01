@@ -9,18 +9,71 @@ namespace OSCTools.OSCmooth.Util
 {
     public class AnimUtil
     {
-        public static AnimatorControllerLayer CreateAnimLayerInController(string paramName, AnimatorController animatorController)
+        public static void CleanNestedStateChilds(ChildAnimatorState state)
         {
-            // Creating a layer object since the default weight can not be assigned after creation.
+            if (state.state.motion == null)
+                return;
+            
+            if (state.state.motion.GetType() == typeof(BlendTree))
+            {
+                AssetDatabase.RemoveObjectFromAsset(state.state.motion);
+            }
+        }
+        public static AnimatorControllerLayer CreateAnimLayerInController(string layerName, AnimatorController animatorController)
+        {
             AnimatorControllerLayer layer = new AnimatorControllerLayer
             {
-                name = paramName,
+                name = layerName,
                 stateMachine = new AnimatorStateMachine
                 {
-                    hideFlags = HideFlags.HideInHierarchy
+                    hideFlags = HideFlags.HideInInspector
                 },
                 defaultWeight = 1f
             };
+
+            int layerIndex = 0;
+
+            if (animatorController.layers.Length == 0)
+            {
+                animatorController.AddLayer(layer);
+
+                if (AssetDatabase.GetAssetPath(animatorController) != string.Empty)
+                {
+                    AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
+                }
+
+                return layer;
+            }
+
+            // Workaround for old blendtrees being stuck in the animator controller file
+            foreach (AnimatorControllerLayer animLayer in animatorController.layers)
+            {
+                if (animLayer.name == layerName)
+                {
+                    // BlendTree bloat workaround
+                    foreach(ChildAnimatorState state in animLayer.stateMachine.states)
+                    {
+                        CleanNestedStateChilds(state);
+                        animLayer.stateMachine.RemoveState(state.state);
+                    }
+
+                    if (animLayer.stateMachine == null)
+                    {
+                        animLayer.stateMachine = new AnimatorStateMachine();
+                        AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
+                    }
+
+                    layer = animLayer;
+
+                    return layer;
+                }
+            }
+
+            for (int i = animatorController.layers.Length - 1; i < layerIndex; i--)
+            {
+                if (animatorController.layers[i].name == layer.name)
+                    animatorController.RemoveLayer(i);
+            }
 
             // Store Layer into Animator Controller, as creating a Layer object is not serialized unless we store it inside an asset.
             if (AssetDatabase.GetAssetPath(animatorController) != string.Empty)
@@ -88,7 +141,7 @@ namespace OSCTools.OSCmooth.Util
             BlendTree rootTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInHierarchy,
+                hideFlags = HideFlags.HideInInspector,
                 blendParameter = paramName + smoothnessSuffix,
                 name = paramName + " Root",
                 useAutomaticThresholds = false
@@ -96,7 +149,7 @@ namespace OSCTools.OSCmooth.Util
             BlendTree falseTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInHierarchy,
+                hideFlags = HideFlags.HideInInspector,
                 blendParameter = paramName,
                 name = "ProxyBlend",
                 useAutomaticThresholds = false
@@ -104,7 +157,7 @@ namespace OSCTools.OSCmooth.Util
             BlendTree trueTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInHierarchy,
+                hideFlags = HideFlags.HideInInspector,
                 blendParameter = paramName + proxySuffix,
                 name = "TrueBlend",
                 useAutomaticThresholds = false
@@ -121,10 +174,6 @@ namespace OSCTools.OSCmooth.Util
 
             trueTree.AddChild(driverAnims[0], -1);
             trueTree.AddChild(driverAnims[1], 1);
-
-            AssetDatabase.AddObjectToAsset(rootTree, AssetDatabase.GetAssetPath(stateMachine));
-            AssetDatabase.AddObjectToAsset(falseTree, AssetDatabase.GetAssetPath(stateMachine));
-            AssetDatabase.AddObjectToAsset(trueTree, AssetDatabase.GetAssetPath(stateMachine));
 
             return rootTree;
         }

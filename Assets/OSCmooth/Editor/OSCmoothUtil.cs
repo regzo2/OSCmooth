@@ -9,14 +9,20 @@ namespace OSCTools.OSCmooth.Util
 {
     public class AnimUtil
     {
-        public static void CleanNestedStateChilds(ChildAnimatorState state)
+
+        public static void CleanAnimatorBlendTreeBloat(AnimatorController animatorController, string filter)
         {
-            if (state.state.motion == null)
-                return;
-            
-            if (state.state.motion.GetType() == typeof(BlendTree))
+            Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController)); 
+
+            foreach (Object asset in animatorAssets)
             {
-                AssetDatabase.RemoveObjectFromAsset(state.state.motion);
+                if (asset.GetType() == typeof(BlendTree))
+                {
+                    if (((BlendTree)asset).name.Contains(filter))
+                    {
+                        Object.DestroyImmediate(asset, true);
+                    }
+                }
             }
         }
         public static AnimatorControllerLayer CreateAnimLayerInController(string layerName, AnimatorController animatorController)
@@ -26,7 +32,7 @@ namespace OSCTools.OSCmooth.Util
                 name = layerName,
                 stateMachine = new AnimatorStateMachine
                 {
-                    hideFlags = HideFlags.HideInInspector
+                    hideFlags = HideFlags.HideInHierarchy
                 },
                 defaultWeight = 1f
             };
@@ -45,18 +51,13 @@ namespace OSCTools.OSCmooth.Util
                 return layer;
             }
 
+            CleanAnimatorBlendTreeBloat(animatorController,  "OSCm_");
+
             // Workaround for old blendtrees being stuck in the animator controller file
             foreach (AnimatorControllerLayer animLayer in animatorController.layers)
             {
                 if (animLayer.name == layerName)
                 {
-                    // BlendTree bloat workaround
-                    foreach(ChildAnimatorState state in animLayer.stateMachine.states)
-                    {
-                        CleanNestedStateChilds(state);
-                        animLayer.stateMachine.RemoveState(state.state);
-                    }
-
                     if (animLayer.stateMachine == null)
                     {
                         animLayer.stateMachine = new AnimatorStateMachine();
@@ -141,25 +142,25 @@ namespace OSCTools.OSCmooth.Util
             BlendTree rootTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInInspector,
+                hideFlags = HideFlags.HideInHierarchy,
                 blendParameter = paramName + smoothnessSuffix,
-                name = paramName + " Root",
+                name = "OSCm_" + paramName + " Root",
                 useAutomaticThresholds = false
             };
             BlendTree falseTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInInspector,
+                hideFlags = HideFlags.HideInHierarchy,
                 blendParameter = paramName,
-                name = "ProxyBlend",
+                name = "OSCm_ProxyBlend",
                 useAutomaticThresholds = false
             }; ;
             BlendTree trueTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInInspector,
+                hideFlags = HideFlags.HideInHierarchy,
                 blendParameter = paramName + proxySuffix,
-                name = "TrueBlend",
+                name = "OSCm_TrueBlend",
                 useAutomaticThresholds = false
             }; ;
 
@@ -174,6 +175,10 @@ namespace OSCTools.OSCmooth.Util
 
             trueTree.AddChild(driverAnims[0], -1);
             trueTree.AddChild(driverAnims[1], 1);
+
+            AssetDatabase.AddObjectToAsset(rootTree, AssetDatabase.GetAssetPath(animatorController));
+            AssetDatabase.AddObjectToAsset(falseTree, AssetDatabase.GetAssetPath(animatorController));
+            AssetDatabase.AddObjectToAsset(trueTree, AssetDatabase.GetAssetPath(animatorController));
 
             return rootTree;
         }

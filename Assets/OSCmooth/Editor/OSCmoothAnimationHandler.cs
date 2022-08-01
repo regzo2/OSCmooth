@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Jobs;
 using OSCTools.OSCmooth.Util;
 using OSCTools.OSCmooth.Types;
 
@@ -46,7 +47,7 @@ namespace OSCTools.OSCmooth.Animation
             var basisLocalBlendTree = new BlendTree()
             {
                 blendType = BlendTreeType.Direct,
-                name = "Local",
+                name = "OSCm_Local",
                 useAutomaticThresholds = false
                 
             };
@@ -54,7 +55,7 @@ namespace OSCTools.OSCmooth.Animation
             var basisRemoteBlendTree = new BlendTree()
             {
                 blendType = BlendTreeType.Direct,
-                name = "Remote",
+                name = "OSCm_Remote",
                 useAutomaticThresholds = false
             };
 

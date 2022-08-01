@@ -116,6 +116,12 @@ namespace OSCTools.OSCmooth
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));
 
+                if (_animatorController == null)
+                {
+                    EditorGUILayout.HelpBox("This Playable Layer must have an Animator Controller in order for OSCmooth to function.", MessageType.Warning, true);
+                    return;
+                }
+
                 EditorGUILayout.Space();
                 if (GUILayout.Button
                 (

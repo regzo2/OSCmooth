@@ -47,6 +47,7 @@ namespace OSCTools.OSCmooth.Animation
             var basisLocalBlendTree = new BlendTree()
             {
                 blendType = BlendTreeType.Direct,
+                hideFlags = HideFlags.HideInHierarchy,
                 name = "OSCm_Local",
                 useAutomaticThresholds = false
                 
@@ -55,6 +56,7 @@ namespace OSCTools.OSCmooth.Animation
             var basisRemoteBlendTree = new BlendTree()
             {
                 blendType = BlendTreeType.Direct,
+                hideFlags = HideFlags.HideInHierarchy,
                 name = "OSCm_Remote",
                 useAutomaticThresholds = false
             };

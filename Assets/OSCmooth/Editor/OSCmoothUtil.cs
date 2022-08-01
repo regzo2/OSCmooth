@@ -27,54 +27,26 @@ namespace OSCTools.OSCmooth.Util
         }
         public static AnimatorControllerLayer CreateAnimLayerInController(string layerName, AnimatorController animatorController)
         {
+            for (int i = 0; i < animatorController.layers.Length; i++)
+            {
+                if (animatorController.layers[i].name == layerName)
+                {
+                    animatorController.RemoveLayer(i);
+                }
+            }
+
             AnimatorControllerLayer layer = new AnimatorControllerLayer
             {
                 name = layerName,
                 stateMachine = new AnimatorStateMachine
                 {
+                    name = layerName,
                     hideFlags = HideFlags.HideInHierarchy
                 },
                 defaultWeight = 1f
             };
 
-            int layerIndex = 0;
-
-            if (animatorController.layers.Length == 0)
-            {
-                animatorController.AddLayer(layer);
-
-                if (AssetDatabase.GetAssetPath(animatorController) != string.Empty)
-                {
-                    AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
-                }
-
-                return layer;
-            }
-
             CleanAnimatorBlendTreeBloat(animatorController,  "OSCm_");
-
-            // Workaround for old blendtrees being stuck in the animator controller file
-            foreach (AnimatorControllerLayer animLayer in animatorController.layers)
-            {
-                if (animLayer.name == layerName)
-                {
-                    if (animLayer.stateMachine == null)
-                    {
-                        animLayer.stateMachine = new AnimatorStateMachine();
-                        AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
-                    }
-
-                    layer = animLayer;
-
-                    return layer;
-                }
-            }
-
-            for (int i = animatorController.layers.Length - 1; i < layerIndex; i--)
-            {
-                if (animatorController.layers[i].name == layer.name)
-                    animatorController.RemoveLayer(i);
-            }
 
             // Store Layer into Animator Controller, as creating a Layer object is not serialized unless we store it inside an asset.
             if (AssetDatabase.GetAssetPath(animatorController) != string.Empty)

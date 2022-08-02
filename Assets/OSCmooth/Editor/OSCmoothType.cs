@@ -19,9 +19,8 @@ namespace OSCTools.OSCmooth.Types
         // such as VRCFaceTracking binary parameters.
         public bool flipInputOutput;
 
-        // This will convert all instances of the base parameter with the 
-        // Proxy version of the parameter. This could potentially be destructive
-        // to the animator so be careful.
+        // This will convert all instances of the base parameter to the proxy in every blend tree.
+        // WARNING. Please be considerate with this setting.
         public bool convertToProxy;
 
         // for Editor window visibility
@@ -53,7 +52,7 @@ namespace OSCTools.OSCmooth.Types
         }
     }
 
-        [Serializable]
+    [Serializable]
     public class OSCmoothLayer : ScriptableObject
     {
         public List<OSCmoothParameter> parameters;

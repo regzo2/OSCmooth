@@ -151,7 +151,7 @@ namespace OSCTools.OSCmooth
                 }
                 EditorGUILayout.Space();
 
-                _showGlobalConfiguration = EditorGUILayout.Foldout(_showGlobalConfiguration, "Global Parameter Configuration");
+                _showGlobalConfiguration = EditorGUILayout.Foldout(_showGlobalConfiguration, "Default Parameter Values");
                 if (_showGlobalConfiguration)
                 {
                     DrawParameterConfiguration(_basisConfigurationParameter, false);

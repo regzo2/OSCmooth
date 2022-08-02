@@ -36,7 +36,10 @@ namespace OSCTools.OSCmooth.Util
                     if(((BlendTree)asset).blendParameter == initParameter)
                         ((BlendTree)asset).blendParameter = newParameter;
 
-                    for(int i = 0; i < ((BlendTree)asset).children.Length; i++)
+                    if (((BlendTree)asset).blendParameterY == initParameter)
+                        ((BlendTree)asset).blendParameterY = newParameter;
+
+                    for (int i = 0; i < ((BlendTree)asset).children.Length; i++)
                     {
                         if (((BlendTree)asset).children[i].directBlendParameter == initParameter)
                             ((BlendTree)asset).children[i].directBlendParameter = newParameter;

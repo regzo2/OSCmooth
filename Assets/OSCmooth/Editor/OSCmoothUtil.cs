@@ -25,7 +25,7 @@ namespace OSCTools.OSCmooth.Util
                 }
             }
         }
-        public static void RenameBlendTreeParameterInController(AnimatorController animatorController, string initParameter, string newParameter)
+        public static void RenameAllStateMachineInstancesOfBlendParameter(AnimatorController animatorController, string initParameter, string newParameter)
         {
             Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController));
 
@@ -44,6 +44,23 @@ namespace OSCTools.OSCmooth.Util
                         if (((BlendTree)asset).children[i].directBlendParameter == initParameter)
                             ((BlendTree)asset).children[i].directBlendParameter = newParameter;
                     }
+
+                    continue;
+                }
+
+                if (asset.GetType() == typeof(AnimatorState))
+                {
+                    if (((AnimatorState)asset).timeParameter == initParameter)
+                        ((AnimatorState)asset).timeParameter = newParameter;
+
+                    if (((AnimatorState)asset).speedParameter == initParameter)
+                        ((AnimatorState)asset).speedParameter = newParameter;
+
+                    if (((AnimatorState)asset).cycleOffsetParameter == initParameter)
+                        ((AnimatorState)asset).cycleOffsetParameter = newParameter;
+
+                    if (((AnimatorState)asset).mirrorParameter == initParameter)
+                        ((AnimatorState)asset).mirrorParameter = newParameter;
                 }
             }
         }

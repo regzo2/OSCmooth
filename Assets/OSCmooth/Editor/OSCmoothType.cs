@@ -37,8 +37,8 @@ namespace OSCTools.OSCmooth.Types
         public OSCmoothParameter(string paramName)
         {
             this.paramName = paramName;
-            localSmoothness = 0.5f;
-            remoteSmoothness = 0.9f;
+            localSmoothness = 0.15f;
+            remoteSmoothness = 0.7f;
             convertToProxy = true;
             flipInputOutput = false;
         }

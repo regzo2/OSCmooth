@@ -6,7 +6,7 @@
 
 OSCmooth is a VRCSDK tool to help easily convert your existing parameter driven animation setups to be smoothed out over the network, with the idea that OSC in its current state does not have any sort of officially supported network interpolation. This for all intents and purposes is designed to be an in-animator solution for that issue.
 
-This tool started development after being that IK Sync currently does *not* have any increased network frequency contrary to VRCDocs, so using IK Sync only interpolates parameters. This means that we could get the same effect that IK Sync does by replicating it in the animator.
+This tool started development after information released that IK Sync currently does *not* have any increased network frequency, contrary to information available on the VRC Docs, so using IK Sync only interpolates parameters. This means that the same or similar smoothing or interpolation system could replicate IK Sync without relying to heavily on the existing networking framework provided by VRChat.
 
 ## Getting Started
 1. Download `OSCmooth.unitypackage` from [Releases](https://github.com/regzo2/OSCmooth/releases).

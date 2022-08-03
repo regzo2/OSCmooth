@@ -12,7 +12,7 @@ This tool started development after information released that IK Sync currently 
 1. Download `OSCmooth.unitypackage` from [Releases](https://github.com/regzo2/OSCmooth/releases).
 2. Import `OSCmooth.unitypackage` into your Unity project.
 3. Access the tool from the top toolbar under Tools/OSCmooth.
-4. (Optionally) View the [OSCmooth Workflow](https://github.com/regzo2/OSCmooth/blob/master/README.md#features) section for a quick-start
+4. (Optionally) View the [OSCmooth Workflow](#features) section for a quick-start
 
 ## Features
 >OSCmooth provides a neat interface to easily apply smoothing to multiple parameters at a time.

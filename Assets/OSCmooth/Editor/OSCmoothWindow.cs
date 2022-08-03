@@ -37,7 +37,7 @@ namespace OSCTools.OSCmooth
         {
             var window = EditorWindow.GetWindow<OSCmoothWindow>("OSCmooth");
             window.maxSize = new Vector2(512, 1024);
-            window.minSize = new Vector2(368, 768);
+            window.minSize = new Vector2(368, 480);
             window.Show();
         }
 

@@ -9,44 +9,33 @@ namespace OSCTools.OSCmooth.Types
     {
 
         // for Animation creation purposes:
-        public float localSmoothness;
-        public float remoteSmoothness;
-        public string paramName;
+        public float localSmoothness = 0.15f;
+        public float remoteSmoothness = 0.9f;
+        public string paramName = "NewParam";
 
         // This setting sets the output to controll the
         // base parameter. This is useful if an OSC app
         // doesn't need to directly control the base parameter,
         // such as VRCFaceTracking binary parameters.
-        public bool flipInputOutput;
+        public bool flipInputOutput = false;
 
         // This will convert all instances of the base parameter to the proxy in every blend tree.
         // WARNING. Please be considerate with this setting.
-        public bool convertToProxy;
+        public bool convertToProxy = true;
 
         // for Editor window visibility
         public bool isVisible;
 
-        public OSCmoothParameter()
-        {
-            localSmoothness = 0.5f;
-            remoteSmoothness = 0.9f;
-            paramName = "NewParam";
-            convertToProxy = true;
-            flipInputOutput = false;
-        }
+        public OSCmoothParameter() { }
         public OSCmoothParameter(string paramName)
         {
             this.paramName = paramName;
-            localSmoothness = 0.15f;
-            remoteSmoothness = 0.7f;
-            convertToProxy = true;
-            flipInputOutput = false;
         }
         public OSCmoothParameter(string paramName, float localSmoothness, float remoteSmoothness, bool convertToProxy, bool flipInputOutput)
         {
             this.paramName = paramName;
-            this.localSmoothness = 0.5f;
-            this.remoteSmoothness = 0.9f;
+            this.localSmoothness = localSmoothness;
+            this.remoteSmoothness = remoteSmoothness;
             this.convertToProxy = convertToProxy;
             this.flipInputOutput = flipInputOutput;
         }

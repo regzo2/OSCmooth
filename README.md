@@ -72,6 +72,14 @@ And the resultant animation setup:
   <img src="https://user-images.githubusercontent.com/74634856/182496410-62e6b9eb-6bf8-42a9-a254-c02f03254c2d.gif" alt="animated" />
 </p>
 
+## Roadmap
+
+- [ ] Potentially decouple animation layer from base Playable Layer, and merge on build for dynamically added, non-destructive implementation
+  - [ ] More generalized automatic setup, automatic implementation
+  - [ ] Allow third-party tools/animations/etc. to directly implement their own parameters into the smoothing layer without user intervention.
+- [ ] Implement frame-time detection and smoothing correction.
+  - [ ] Simplify parameter setup
+
 ## Credits
 - [Haï~](https://github.com/hai-vr/) for the innovative blend tree smoothing technique
 - [Razgriz](https://github.com/rrazgriz) for coming up with the idea of compacting the huge animation setup using Direct blendtrees

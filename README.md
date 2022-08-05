@@ -3,6 +3,7 @@
 
 https://user-images.githubusercontent.com/74634856/183157866-37a20b11-20b5-4cfe-a356-e2acfea23a68.mp4
 
+Example of what other people see with OSCmooth applied to a face-tracked avatar.
 ## What is OSCmooth?
 > Easily fix your choppy face-tracking, stuttery custom expressions, or other OSC controlled VRChat parameters by running your existing avatar setup through this tool!
 

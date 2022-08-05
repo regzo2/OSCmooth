@@ -16,7 +16,7 @@ namespace OSCTools.OSCmooth.Util
 
             foreach (Object asset in animatorAssets)
             {
-                if (asset.GetType() == typeof(BlendTree))
+                if (asset?.GetType() == typeof(BlendTree))
                 {
                     if (((BlendTree)asset).name.Contains(filter))
                     {
@@ -31,7 +31,7 @@ namespace OSCTools.OSCmooth.Util
 
             foreach (Object asset in animatorAssets)
             {
-                if (asset.GetType() == typeof(BlendTree))
+                if (asset?.GetType() == typeof(BlendTree))
                 {
                     if(((BlendTree)asset).blendParameter == initParameter)
                         ((BlendTree)asset).blendParameter = newParameter;
@@ -48,7 +48,7 @@ namespace OSCTools.OSCmooth.Util
                     continue;
                 }
 
-                if (asset.GetType() == typeof(AnimatorState))
+                if (asset?.GetType() == typeof(AnimatorState))
                 {
                     if (((AnimatorState)asset).timeParameter == initParameter)
                         ((AnimatorState)asset).timeParameter = newParameter;

@@ -149,7 +149,7 @@ namespace OSCTools.OSCmooth.Util
             return new AnimationClip[] { _animationClip1, _animationClip2 };
         }
 
-        public static BlendTree CreateSmoothingBlendTree(AnimatorController animatorController, AnimatorStateMachine stateMachine, float smoothness, string paramName, bool driveBase, string smoothnessSuffix = "Smoother", string proxySuffix = "Proxy")
+        public static BlendTree CreateSmoothingBlendTree(AnimatorController animatorController, AnimatorStateMachine stateMachine, float smoothness, string paramName, bool driveBase, float range, string smoothnessSuffix = "Smoother", string proxySuffix = "Proxy")
         {
             AnimatorControllerParameter smootherParam = ParameterUtil.CheckAndCreateParameter(paramName + smoothnessSuffix, animatorController, AnimatorControllerParameterType.Float, smoothness);
             ParameterUtil.CheckAndCreateParameter(paramName + proxySuffix, animatorController, AnimatorControllerParameterType.Float);
@@ -182,7 +182,7 @@ namespace OSCTools.OSCmooth.Util
             }; ;
 
             // Create smoothing anims
-            AnimationClip[] driverAnims = AnimUtil.CreateFloatSmootherAnimation(paramName, smoothnessSuffix, proxySuffix, -1f, 1, driveBase);
+            AnimationClip[] driverAnims = AnimUtil.CreateFloatSmootherAnimation(paramName, smoothnessSuffix, proxySuffix, -range, range, driveBase);
 
             rootTree.AddChild(falseTree, driveBase ? 1 : 0);
             rootTree.AddChild(trueTree, driveBase ? 0 : 1);

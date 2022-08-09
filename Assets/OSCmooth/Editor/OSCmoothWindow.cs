@@ -20,6 +20,7 @@ namespace OSCTools.OSCmooth
         private OSCmoothParameter _basisConfigurationParameter;
         private bool _showParameters = true;
         private bool _showGlobalConfiguration = false;
+        private bool _writeDefaults = false;
         private Vector2 paramMenuScroll;
 
         readonly private string[] _animatorSelection = new string[]
@@ -113,6 +114,16 @@ namespace OSCTools.OSCmooth
                 }
 
                 EditorGUILayout.EndHorizontal();
+
+                _writeDefaults = EditorGUILayout.Toggle
+                (
+                    new GUIContent
+                    (
+                        "Write Defaults",
+                        "Sets whether the generated OSCmooth layer will have write defaults on or off. Set true for WD on, false for WD off"
+                    ),
+                    _writeDefaults
+                );
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));
 
@@ -221,8 +232,9 @@ namespace OSCTools.OSCmooth
                 {
                     OSCmoothAnimationHandler animHandler = new OSCmoothAnimationHandler();
 
-                    animHandler.animatorController = _animatorController;
-                    animHandler.parameters = _parameterAsset.parameters;
+                    animHandler._animatorController = _animatorController;
+                    animHandler._parameters = _parameterAsset.parameters;
+                    animHandler._writeDefaults = _writeDefaults;
 
                     animHandler.CreateSmoothAnimationLayer();
                 }

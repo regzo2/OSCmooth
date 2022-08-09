@@ -29,7 +29,7 @@ namespace OSCTools.OSCmooth
 
         readonly private string[] oscmBlacklist = new string[]
         {
-            "OSCm_", "BlendSet", "IsLocal", "Smoother", "Smooth", "Proxy"
+            "OSCm_", "IsLocal", "Smooth", "Proxy", "_Float", "_Normalizer", "_FTI"
         };
 
         [MenuItem("Tools/OSCmooth")]

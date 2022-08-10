@@ -1,18 +1,22 @@
 # OSCmooth
 > Create smoothed out animations that mimics IK Sync on avatars for OSC controlled parameters for VRChat.
 
+https://user-images.githubusercontent.com/74634856/183157866-37a20b11-20b5-4cfe-a356-e2acfea23a68.mp4
+
+Example of what other/remote users see over the network with OSCmooth applied to a face-tracked avatar.
+
 ## What is OSCmooth?
 > Easily fix your choppy face-tracking, stuttery custom expressions, or other OSC controlled VRChat parameters by running your existing avatar setup through this tool!
 
 OSCmooth is a VRCSDK tool to help easily convert your existing parameter driven animation setups to be smoothed out over the network, with the idea that OSC in its current state does not have any sort of officially supported network interpolation. This for all intents and purposes is designed to be an in-animator solution for that issue.
 
-This tool started development after information released that IK Sync currently does *not* have any increased network frequency, contrary to information available on the VRC Docs, so using IK Sync only interpolates parameters. This means that the same or similar smoothing or interpolation system could replicate IK Sync without relying to heavily on the existing networking framework provided by VRChat.
+This tool started development after information released that IK Sync currently does *not* have any increased network frequency, contrary to information available on the VRC Docs, so using IK Sync only interpolates parameters. This means that the same or similar smoothing or interpolation system could replicate IK Sync without relying too heavily on the existing networking framework provided by VRChat.
 
 ## Getting Started
 1. Download `OSCmooth.unitypackage` from [Releases](https://github.com/regzo2/OSCmooth/releases).
 2. Import `OSCmooth.unitypackage` into your Unity project.
 3. Access the tool from the top toolbar under Tools/OSCmooth.
-4. (Optionally) View the [OSCmooth Workflow](#oscmooth-tool-workflow) section for a quick-start
+4. (Optionally) View the [OSCmooth Workflow](#oscmooth-tool-workflow) section for a quick-start.
 
 ## Features
 >OSCmooth provides a neat interface to easily apply smoothing to multiple parameters at a time.
@@ -42,7 +46,6 @@ Settings:
       - How much smoothness is applied that other users will experience for this parameter.
     - Proxy Conversion
       - Convert existing animations to work with the output Proxy parameter generated from this tool.
-
     - Flip Input/Output
       - A mostly redundant setting that will set the input to be the Proxy parameter and output to be the base parameter. Useful if an app outputs a proxy parameter.  
     

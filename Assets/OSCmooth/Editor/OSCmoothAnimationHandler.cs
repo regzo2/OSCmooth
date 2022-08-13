@@ -13,6 +13,7 @@ namespace OSCTools.OSCmooth.Animation
         public AnimatorController _animatorController;
         public List<OSCmoothParameter> _parameters;
         public bool _writeDefaults;
+        public string _animExportDirectory;
 
         public OSCmoothAnimationHandler() { }
         public OSCmoothAnimationHandler(List<OSCmoothParameter> smoothLayer, AnimatorController animatorController, bool writeDefaults = false)
@@ -91,14 +92,14 @@ namespace OSCTools.OSCmooth.Animation
                 localChildMotion.Add(new ChildMotion 
                 {
                     directBlendParameter = "OSCm_BlendSet",
-                    motion = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput, (float)_parameters.Count, "OSCm_Smoother", "OSCm_Proxy"),
+                    motion = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput, (float)_parameters.Count, _animExportDirectory, "OSCm_Smoother", "OSCm_Proxy"),
                     timeScale = 1
                 });
 
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "OSCm_BlendSet",
-                    motion = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, (float)_parameters.Count, "OSCm_SmootherRemote", "OSCm_Proxy"),
+                    motion = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, (float)_parameters.Count, _animExportDirectory, "OSCm_SmootherRemote", "OSCm_Proxy"),
                     timeScale = 1,
                 });
             }

@@ -36,6 +36,7 @@ namespace OSCTools.OSCmooth
         [MenuItem("Tools/OSCmooth")]
         public static void ShowWindow()
         {
+            AssetDatabase.Refresh();
             var window = EditorWindow.GetWindow<OSCmoothWindow>("OSCmooth");
             window.maxSize = new Vector2(512, 1024);
             window.minSize = new Vector2(368, 480);
@@ -109,8 +110,8 @@ namespace OSCTools.OSCmooth
                     if (AssetDatabase.GetAssetPath(_parameterAsset) == string.Empty)
                         AssetDatabase.CreateAsset(_parameterAsset, EditorUtility.SaveFilePanelInProject("Save OSCmooth Configuration", "OSCmoothConfig", "asset", ""));
 
+                    EditorUtility.SetDirty(_parameterAsset);
                     AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -159,6 +160,10 @@ namespace OSCTools.OSCmooth
                             });
                         }
                     }
+
+                    EditorUtility.SetDirty(_parameterAsset);
+                    AssetDatabase.SaveAssets();
+
                 }
                 EditorGUILayout.Space();
 
@@ -192,8 +197,6 @@ namespace OSCTools.OSCmooth
                     }
                 }
 
-                EditorUtility.SetDirty(_parameterAsset);
-
                 EditorGUILayout.Space();
 
                 if (GUILayout.Button
@@ -214,6 +217,9 @@ namespace OSCTools.OSCmooth
                         convertToProxy = _basisConfigurationParameter.convertToProxy
                     };
                     _parameterAsset.parameters.Add(param);
+
+                    EditorUtility.SetDirty(_parameterAsset);
+                    AssetDatabase.SaveAssets();
                 }
 
                 EditorGUILayout.EndScrollView();
@@ -232,9 +238,15 @@ namespace OSCTools.OSCmooth
                 {
                     OSCmoothAnimationHandler animHandler = new OSCmoothAnimationHandler();
 
+                    string animatorGUID;
+                    long id;
+
+                    AssetDatabase.TryGetGUIDAndLocalFileIdentifier(_animatorController, out animatorGUID, out id);
+
                     animHandler._animatorController = _animatorController;
                     animHandler._parameters = _parameterAsset.parameters;
                     animHandler._writeDefaults = _writeDefaults;
+                    animHandler._animExportDirectory = "Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + "/";
 
                     animHandler.CreateSmoothAnimationLayer();
                 }

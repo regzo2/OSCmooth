@@ -117,26 +117,26 @@ namespace OSCTools.OSCmooth.Util
                 Directory.CreateDirectory(directory);
             }
 
-            string[] guid = (AssetDatabase.FindAssets(paramName + initThreshold + "Smoother.anim"));
+            string[] guid = (AssetDatabase.FindAssets(paramName + "-1" + "Smoother.anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClipInit, directory + paramName + initThreshold + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipInit, directory + paramName + "-1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
             else
             {
                 AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
-                AssetDatabase.CreateAsset(_animationClipInit, directory + paramName + initThreshold + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipInit, directory + paramName + "-1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
-            guid = (AssetDatabase.FindAssets(paramName + finalThreshold + smoothSuffix + ".anim"));
+            guid = (AssetDatabase.FindAssets(paramName + "1" + smoothSuffix + ".anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClipFinal, directory + paramName + finalThreshold + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipFinal, directory + paramName + "1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -144,7 +144,7 @@ namespace OSCTools.OSCmooth.Util
             {
 
                 AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
-                AssetDatabase.CreateAsset(_animationClipFinal, "Assets/OSCmooth/Generated/Anims/" + paramName + finalThreshold + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipFinal, "Assets/OSCmooth/Generated/Anims/" + paramName + "1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 

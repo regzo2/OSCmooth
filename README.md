@@ -82,6 +82,10 @@ And the resultant animation setup:
   - [ ] Allow third-party tools/animations/etc. to directly implement their own parameters into the smoothing layer without user intervention.
 - [ ] Implement frame-time detection and smoothing correction.
   - [ ] Simplify parameter setup
+  
+## Licenses / Distribution
+
+**All of the source assets and all generated assets from OSCmooth fall under the [MIT License](https://github.com/regzo2/OSCmooth/blob/master/LICENSE)**.
 
 ## Credits
 - [Haï~](https://github.com/hai-vr/) for the innovative blend tree smoothing technique

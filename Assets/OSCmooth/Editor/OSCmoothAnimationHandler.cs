@@ -99,7 +99,7 @@ namespace OSCTools.OSCmooth.Animation
                 remoteChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "OSCm/BlendSet",
-                    motion = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, (float)_parameters.Count, _animExportDirectory, "OSCm/Remote/", "Smoother", "OSCm/Proxy/", "Proxy"),
+                    motion = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, (float)_parameters.Count, _animExportDirectory, "OSCm/Remote/", "SmootherRemote", "OSCm/Proxy/", "Proxy"),
                     timeScale = 1,
                 });
             }

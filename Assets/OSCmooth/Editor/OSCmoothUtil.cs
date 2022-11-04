@@ -83,7 +83,7 @@ namespace OSCTools.OSCmooth.Util
                 defaultWeight = 1f
             };
 
-            CleanAnimatorBlendTreeBloat(animatorController,  "OSCm/");
+            CleanAnimatorBlendTreeBloat(animatorController,  "OSCm_");
 
             // Store Layer into Animator Controller, as creating a Layer object is not serialized unless we store it inside an asset.
             if (AssetDatabase.GetAssetPath(animatorController) != string.Empty)

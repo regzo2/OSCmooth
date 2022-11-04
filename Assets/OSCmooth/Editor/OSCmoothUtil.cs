@@ -109,8 +109,8 @@ namespace OSCTools.OSCmooth.Util
             AnimationCurve _curvesInit = new AnimationCurve(new Keyframe(0.0f, initThreshold));
             AnimationCurve _curvesFinal = new AnimationCurve(new Keyframe(0.0f, finalThreshold));
 
-            _animationClipInit.SetCurve("", typeof(Animator), driveBase ? paramName : proxyPrefix + paramName + proxySuffix, _curvesInit);
-            _animationClipFinal.SetCurve("", typeof(Animator), driveBase ? paramName : proxyPrefix + paramName + proxySuffix, _curvesFinal);
+            _animationClipInit.SetCurve("", typeof(Animator), driveBase ? paramName : proxyPrefix + paramName, _curvesInit);
+            _animationClipFinal.SetCurve("", typeof(Animator), driveBase ? paramName : proxyPrefix + paramName, _curvesFinal);
 
             if (!Directory.Exists(directory))
             {
@@ -164,8 +164,8 @@ namespace OSCTools.OSCmooth.Util
 
         public static BlendTree CreateSmoothingBlendTree(AnimatorController animatorController, AnimatorStateMachine stateMachine, float smoothness, string paramName, bool driveBase, float range, string directory, string smoothnessPrefix = "OSCm/", string smoothnessSuffix = "Smoother", string proxyPrefix = "OSCm/", string proxySuffix = "Proxy")
         {
-            AnimatorControllerParameter smootherParam = ParameterUtil.CheckAndCreateParameter(smoothnessPrefix + paramName + smoothnessSuffix, animatorController, AnimatorControllerParameterType.Float, smoothness);
-            ParameterUtil.CheckAndCreateParameter(proxyPrefix + paramName + proxySuffix, animatorController, AnimatorControllerParameterType.Float);
+            AnimatorControllerParameter smootherParam = ParameterUtil.CheckAndCreateParameter(smoothnessPrefix + paramName + "Smoother", animatorController, AnimatorControllerParameterType.Float, smoothness);
+            ParameterUtil.CheckAndCreateParameter(proxyPrefix + paramName, animatorController, AnimatorControllerParameterType.Float);
             ParameterUtil.CheckAndCreateParameter(paramName, animatorController, AnimatorControllerParameterType.Float);
 
             // Creating 3 blend trees to create the feedback loop
@@ -173,7 +173,7 @@ namespace OSCTools.OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = smoothnessPrefix + paramName + smoothnessSuffix,
+                blendParameter = smoothnessPrefix + paramName + "Smoother",
                 name = "OSCm_" + paramName + " Root",
                 useAutomaticThresholds = false
             };
@@ -181,7 +181,7 @@ namespace OSCTools.OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = driveBase ? paramName + proxySuffix : paramName,
+                blendParameter = driveBase ? proxyPrefix + paramName : paramName,
                 name = "OSCm_Input",
                 useAutomaticThresholds = false
             };
@@ -189,7 +189,7 @@ namespace OSCTools.OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = driveBase ? paramName: proxyPrefix + paramName + proxySuffix,
+                blendParameter = driveBase ? paramName: proxyPrefix + paramName,
                 name = "OSCm_Driver",
                 useAutomaticThresholds = false
             };

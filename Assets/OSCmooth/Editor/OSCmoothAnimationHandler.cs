@@ -86,7 +86,7 @@ namespace OSCTools.OSCmooth.Animation
             {
                 if (p.convertToProxy)
                 {
-                    AnimUtil.RenameAllStateMachineInstancesOfBlendParameter(_animatorController, p.paramName, "OSCm/Proxy/" + p.paramName + "Proxy");
+                    AnimUtil.RenameAllStateMachineInstancesOfBlendParameter(_animatorController, p.paramName, "OSCm/Proxy/" + p.paramName);
                 }
 
                 localChildMotion.Add(new ChildMotion 

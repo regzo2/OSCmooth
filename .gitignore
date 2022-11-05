@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+#VRCSDK
+Assets/VRCSDK
+Assets/Resources*
+Library*
+ProjectSettings*
+Temp*
+VRC.SDKBase*
+VRC.Enums*

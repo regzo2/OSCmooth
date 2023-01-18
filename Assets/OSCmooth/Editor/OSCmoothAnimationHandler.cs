@@ -5,45 +5,40 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using OSCTools.OSCmooth.Util;
 using OSCTools.OSCmooth.Types;
+using System.Linq;
 
 namespace OSCTools.OSCmooth.Animation
 {
-    public class OSCmoothAnimationHandler
+    public static class OSCmoothAnimationHandler
     {
-        public AnimatorController _animatorController;
-        public List<OSCmoothParameter> _parameters;
-        public bool _writeDefaults;
-        public string _animExportDirectory;
+        public static AnimatorController _animatorController;
+        public static List<OSCmoothParameter> _parameters;
+        public static bool _writeDefaults;
+        public static string _animExportDirectory;
 
-        public OSCmoothAnimationHandler() { }
-        public OSCmoothAnimationHandler(List<OSCmoothParameter> smoothLayer, AnimatorController animatorController, bool writeDefaults = false)
-        {
-            _parameters = smoothLayer;
-            _animatorController = animatorController;
-            _writeDefaults = writeDefaults;
+        public static void RemoveAllOSCmoothFromController()
+        {            
+            AnimUtil.RevertStateMachineParameters(_animatorController);
+            AnimUtil.RemoveExtendedParametersInController("OSCm", _animatorController);
+            AnimUtil.RemoveContainingLayersInController("OSCm", _animatorController);
         }
-        public void CreateSmoothAnimationLayer()
+        public static void CreateSmoothAnimationLayer()
         {
+            // Cleanup Animator before applying OSCmooth:
+            OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
+
+            // Creating new OSCmooth setup.
             AnimatorControllerLayer animLayer;
 
-            // Looking for existing animation layer, and will delete it to replace with a new one. Will look into
-            // creating a more thorough solution to much more effectively overwrite the existing layer for a future update.
-            if(_writeDefaults)
-            {
-                AnimUtil.RemoveAnimLayerInController("_OSCmooth_Smoothing_Gen", _animatorController);
+            if (_writeDefaults)
                 animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Smoothing_WD_Gen", _animatorController);
-            }
-            else
-            {
-                AnimUtil.RemoveAnimLayerInController("_OSCmooth_Smoothing_WD_Gen", _animatorController);
-                animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Smoothing_Gen", _animatorController);              
-            }
+            else animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Smoothing_Gen", _animatorController);
 
             // Creating a Direct BlendTree that will hold all of the smooth driver animations. This is to effectively create a 'sublayer'
             // system within the Direct BlendTree to tidy up the animator base layers from bloating up visually.
             AnimatorState[] state = new AnimatorState[2];
 
-            if(_writeDefaults)
+            if (_writeDefaults)
             {
                 state[0] = animLayer.stateMachine.AddState("OSCmooth_Local_WD", new Vector3(30, 170, 0));
                 state[1] = animLayer.stateMachine.AddState("OSCmooth_Net_WD", new Vector3(30, 170 + 60, 0));
@@ -53,7 +48,7 @@ namespace OSCTools.OSCmooth.Animation
                 state[0] = animLayer.stateMachine.AddState("OSCmooth_Local", new Vector3(30, 170, 0));
                 state[1] = animLayer.stateMachine.AddState("OSCmooth_Net", new Vector3(30, 170 + 60, 0));
             }
-            
+
 
             state[0].writeDefaultValues = _writeDefaults;
             state[1].writeDefaultValues = _writeDefaults;
@@ -76,7 +71,7 @@ namespace OSCTools.OSCmooth.Animation
             if (_writeDefaults)
             {
                 nameLocalWD = "OSCm_Local_WD";
-                nameRemoteWD = "OSCm_Remote_WD";                
+                nameRemoteWD = "OSCm_Remote_WD";
             }
 
             var basisLocalBlendTree = new BlendTree()
@@ -105,7 +100,7 @@ namespace OSCTools.OSCmooth.Animation
             AssetDatabase.AddObjectToAsset(basisRemoteBlendTree, AssetDatabase.GetAssetPath(animLayer.stateMachine));
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            
+
             if (_writeDefaults)
             {
                 ParameterUtil.CheckAndCreateParameter("OSCm/BlendSet", _animatorController, AnimatorControllerParameterType.Float, 1f);
@@ -133,9 +128,9 @@ namespace OSCTools.OSCmooth.Animation
                 {
                     motionLocal = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Local/", "SmootherWD", "OSCm/Proxy/", "Proxy");
                     motionRemote = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Remote/", "SmootherRemoteWD", "OSCm/Proxy/", "Proxy");
-                }              
+                }
 
-                localChildMotion.Add(new ChildMotion 
+                localChildMotion.Add(new ChildMotion
                 {
                     directBlendParameter = "OSCm/BlendSet",
                     motion = motionLocal,

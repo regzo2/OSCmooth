@@ -1,4 +1,8 @@
-﻿using System.IO;
+﻿using BestHTTP.SecureProtocol.Org.BouncyCastle.Crypto.Parameters;
+using OSCTools.OSCmooth.Types;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -62,16 +66,90 @@ namespace OSCTools.OSCmooth.Util
             }
         }
 
-        public static void RemoveAnimLayerInController(string layerName, AnimatorController animatorController)
+        public static List<string> GetAllStateMachineParameters(AnimatorController animatorController)
         {
-            for (int i = 0; i < animatorController.layers.Length; i++)
+            List<string> stateParams = new List<string>();
+
+            Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController));
+
+            foreach (Object asset in animatorAssets)
             {
-                if (animatorController.layers[i].name == layerName)
+                if (asset?.GetType() == typeof(BlendTree))
                 {
-                    animatorController.RemoveLayer(i);
+                    if (!stateParams.Contains(((BlendTree)asset).blendParameter))
+                        stateParams.Add(((BlendTree)asset).blendParameter);
+
+                    if (!stateParams.Contains(((BlendTree)asset).blendParameterY))
+                        stateParams.Add(((BlendTree)asset).blendParameterY);
+
+                    for (int i = 0; i < ((BlendTree)asset).children.Length; i++)
+                    {
+                        if (!stateParams.Contains(((BlendTree)asset).children[i].directBlendParameter))
+                            stateParams.Add(((BlendTree)asset).children[i].directBlendParameter);
+                    }
+
+                    continue;
+                }
+
+                if (asset?.GetType() == typeof(AnimatorState))
+                {
+                    if (!stateParams.Contains(((AnimatorState)asset).timeParameter))
+                        stateParams.Add(((AnimatorState)asset).timeParameter);
+
+                    if (!stateParams.Contains(((AnimatorState)asset).speedParameter))
+                        stateParams.Add(((AnimatorState)asset).speedParameter);
+
+                    if (!stateParams.Contains(((AnimatorState)asset).cycleOffsetParameter))
+                        stateParams.Add(((AnimatorState)asset).cycleOffsetParameter);
+
+                    if (!stateParams.Contains(((AnimatorState)asset).mirrorParameter))
+                        stateParams.Add(((AnimatorState)asset).mirrorParameter);
                 }
             }
 
+            return stateParams;
+        }
+
+        public static void RevertStateMachineParameters(AnimatorController animatorController)
+        {
+            string[] stateParams = GetAllStateMachineParameters(animatorController).ToArray();
+
+            foreach (var oscmParam in OSCmoothFilters.ParameterExtensions)
+            {
+                foreach (var stateParam in stateParams) 
+                {
+                    if (stateParam.Contains(oscmParam))
+                    {
+                        RenameAllStateMachineInstancesOfBlendParameter(animatorController, stateParam, stateParam.Replace(oscmParam, ""));
+                    }
+                }
+            }
+        }
+
+        public static void RemoveExtendedParametersInController(string name, AnimatorController animatorController)
+        {
+            for (int i = 0; i < animatorController.parameters.Length;)
+            {
+                if (animatorController.parameters[i].name.Contains(name))
+                {
+                    animatorController.RemoveParameter(i);
+                    continue;
+                }
+                i++;
+            }          
+        }
+
+        public static void RemoveContainingLayersInController(string name, AnimatorController animatorController)
+        {
+            for (int i = 0; i < animatorController.layers.Length;)
+            {
+                if (animatorController.layers[i].name.Contains(name))
+                {
+                    animatorController.RemoveLayer(i);
+                    continue;
+                }
+                i++;
+            }
         }
 
         public static AnimatorControllerLayer CreateAnimLayerInController(string layerName, AnimatorController animatorController)
@@ -108,7 +186,15 @@ namespace OSCTools.OSCmooth.Util
             return layer;
         }
 
-        public static AnimationClip[] CreateFloatSmootherAnimation(AnimatorController animatorController, string paramName, string smoothSuffix, string proxyPrefix, string proxySuffix, string directory, float initThreshold = -1, float finalThreshold = 1, bool driveBase = false)
+        public static void RemoveAssociatedAnimatorFolder(AnimatorController animatorController)
+        {
+            string animatorGUID;
+            long id;
+
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(animatorController, out animatorGUID, out id);
+        }
+
+        public static AnimationClip[] CreateFloatSmootherAnimation(AnimatorController animatorController, string paramName, string smoothSuffix, string proxyPrefix, string directory, float initThreshold = -1, float finalThreshold = 1, bool driveBase = false)
         {
             string animatorGUID;
             long id;
@@ -207,7 +293,7 @@ namespace OSCTools.OSCmooth.Util
             };
 
             // Create smoothing anims
-            AnimationClip[] driverAnims = AnimUtil.CreateFloatSmootherAnimation(animatorController, paramName, smoothnessSuffix, proxyPrefix, proxySuffix, directory, -range, range, driveBase);
+            AnimationClip[] driverAnims = AnimUtil.CreateFloatSmootherAnimation(animatorController, paramName, smoothnessSuffix, proxyPrefix, directory, -range, range, driveBase);
 
             rootTree.AddChild(falseTree, driveBase ? 1f : 0f);
             rootTree.AddChild(trueTree, driveBase ? 0f : 1f);

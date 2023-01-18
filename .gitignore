@@ -370,3 +370,29 @@ ProjectSettings*
 Temp*
 VRC.SDKBase*
 VRC.Enums*
+/UnityEngine.UI.csproj
+/UnityEngine.TestRunner.csproj
+/UnityEditor.UI.csproj
+/UnityEditor.TestRunner.csproj
+/Unity.VSCode.Editor.csproj
+/Unity.VisualStudio.Editor.csproj
+/Unity.Timeline.Editor.csproj
+/Unity.Timeline.csproj
+/Unity.TextMeshPro.Editor.csproj
+/Unity.TextMeshPro.csproj
+/Unity.Rider.Editor.csproj
+/Unity.PlasticSCM.Editor.csproj
+/Unity.Mathematics.Editor.csproj
+/Unity.Mathematics.csproj
+/Unity.CollabProxy.Editor.csproj
+/Unity.Burst.Editor.csproj
+/Unity.Burst.csproj
+/OSCmooth.sln
+/Assets/_Sacred Bunny/Controllers/FX_1.3.controller
+/Assets/_Sacred Bunny/Controllers
+/Assets/Scenes/SampleScene.unity
+/Assets/Scenes
+/Assets/OSCmooth/Generated/Anims/Animator_354a5319244b7d64ca734626cd690e47
+/Assets
+/Assembly-CSharp.csproj
+/Assembly-CSharp-Editor.csproj

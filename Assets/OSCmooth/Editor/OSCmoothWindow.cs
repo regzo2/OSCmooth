@@ -5,8 +5,6 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using OSCTools.OSCmooth.Animation;
 using OSCTools.OSCmooth.Types;
-using OSCTools.OSCmooth.Util;
-using System.IO;
 using System.Linq;
 
 namespace OSCTools.OSCmooth
@@ -15,23 +13,19 @@ namespace OSCTools.OSCmooth
     {
         private VRCAvatarDescriptor _avDescriptor;
         private AnimatorController _animatorController;
+        private List<string> layers = new List<string>();
+
         private int _layerSelect = 4;
+
         private OSCmoothLayer _parameterAsset;
         private OSCmoothParameter _basisConfigurationParameter;
+
         private bool _showParameters = true;
         private bool _showGlobalConfiguration = false;
         private bool _writeDefaults = false;
         private Vector2 paramMenuScroll;
 
-        readonly private string[] _animatorSelection = new string[]
-        {
-            "Base", "Additive", "Gesture", "Action", "FX"
-        };
-
-        readonly private string[] oscmBlacklist = new string[]
-        {
-            "OSCm/", "IsLocal", "Smooth", "Proxy", "_Float", "_Normalizer", "_FTI"
-        };
+        //readonly private string[] _humanoidLayers = { "Base", "Additive", "Gesture", "Action", "FX" };
 
         [MenuItem("Tools/OSCmooth")]
         public static void ShowWindow()
@@ -43,10 +37,12 @@ namespace OSCTools.OSCmooth
             window.Show();
         }
 
-        private void OnGUI() {
+        private void OnGUI() 
+        {
             DrawGUI();
         }
-        void DrawGUI() { 
+        void DrawGUI() 
+        { 
             _avDescriptor = (VRCAvatarDescriptor)EditorGUILayout.ObjectField
             (
                 new GUIContent
@@ -62,6 +58,15 @@ namespace OSCTools.OSCmooth
 
             if (_avDescriptor != null)
             {
+                // Building animation layer selection
+                layers.Clear();
+                foreach (VRCAvatarDescriptor.CustomAnimLayer animLayer in _avDescriptor.baseAnimationLayers)
+                    layers.Add(animLayer.type.ToString());
+
+                // Making sure the selector never goes beyond the length of the selection
+                if (_layerSelect > layers.Count)
+                    _layerSelect = layers.Count - 1;
+ 
                 _layerSelect = EditorGUILayout.Popup
                 (
                     new GUIContent
@@ -72,7 +77,7 @@ namespace OSCTools.OSCmooth
                         "in order for the tool to properly set up an Animation Layer."
                     ),
                     _layerSelect,
-                    _animatorSelection
+                    layers.ToArray()
                 );
 
                 EditorGUILayout.Space(10f);
@@ -150,7 +155,7 @@ namespace OSCTools.OSCmooth
 
                     foreach (AnimatorControllerParameter parameter in _animatorController.parameters)
                     {
-                        if (parameter.type == AnimatorControllerParameterType.Float && !oscmBlacklist.Any(parameter.name.Contains))
+                        if (parameter.type == AnimatorControllerParameterType.Float && !OSCmoothFilters.BlackList.Any(parameter.name.Contains))
                         {
                             _parameterAsset.parameters.Add(new OSCmoothParameter
                             {
@@ -216,9 +221,11 @@ namespace OSCTools.OSCmooth
                             }
 
                             GUI.color = Color.red;
-                            if (GUILayout.Button("X", GUILayout.Width(40))) {
+                            if (GUILayout.Button("X", GUILayout.Width(40))) 
+                            {
                                 Undo.RecordObject(_parameterAsset, "Remove Parameter");
                                 _parameterAsset.parameters.Remove(parameter);
+                                break;
                             }
 
                             GUI.color = Color.white;
@@ -263,26 +270,53 @@ namespace OSCTools.OSCmooth
                 (
                     new GUIContent
                     (
-                        "Apply OSCmooth to Animator",
+                        "Apply OSCmooth to Layer",
                         "Creates a new Layer in the selected Animator Controller that will apply smoothing " +
                         "to the listed configured parameters."
                     )
                 ))
                 {
-                    OSCmoothAnimationHandler animHandler = new OSCmoothAnimationHandler();
-
                     string animatorGUID;
                     long id;
 
                     AssetDatabase.TryGetGUIDAndLocalFileIdentifier(_animatorController, out animatorGUID, out id);
 
-                    animHandler._animatorController = _animatorController;
-                    animHandler._parameters = _parameterAsset.parameters;
-                    animHandler._writeDefaults = _writeDefaults;
-                    animHandler._animExportDirectory = "Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + "/";
+                    OSCmoothAnimationHandler._animatorController = _animatorController;
+                    OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
+                    OSCmoothAnimationHandler._writeDefaults = _writeDefaults;
+                    OSCmoothAnimationHandler._animExportDirectory = "Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + "/";
 
-                    Undo.RecordObject(animHandler._animatorController, "Apply OSC Smooth to Animator");
-                    animHandler.CreateSmoothAnimationLayer();
+                    Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Apply OSCmooth to Layer");
+                    OSCmoothAnimationHandler.CreateSmoothAnimationLayer();
+                }
+
+                EditorGUILayout.Space(20);
+
+                if (GUILayout.Button
+                (
+                    new GUIContent
+                    (
+                        "Revert OSCmooth from Layer",
+                        "Removes all OSCmooth content from the Animator, and reverts all State Machine parameters back to their original naming." +
+                        "\n\nWARNING: Will recycle all associated animations to the selected Playable Layer as well, proceed with caution."
+                    )
+                ))
+                {
+                    string animatorGUID;
+                    long id;
+
+                    AssetDatabase.TryGetGUIDAndLocalFileIdentifier(_animatorController, out animatorGUID, out id);
+
+                    OSCmoothAnimationHandler._animatorController = _animatorController;
+                    OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
+
+                    Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Revert OSCmooth in Layer");
+                    OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
+
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID);
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + ".meta");
+
+                    AssetDatabase.Refresh();
                 }
 
                 EditorGUILayout.Space(20);

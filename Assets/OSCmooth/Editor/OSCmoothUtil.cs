@@ -11,6 +11,21 @@ namespace OSCTools.OSCmooth.Util
 {
     public class AnimUtil
     {
+        public static string NameNoSymbol(string name)
+        {
+            string nameNoSym = "";
+
+            for (int j = 0; j < name.Length; j++)
+            {
+                if (name[j] != '/')
+                {
+                    nameNoSym += name[j];
+                }
+
+            }
+            return nameNoSym;
+        }
+
         public static void CleanAnimatorBlendTreeBloat(AnimatorController animatorController, string filter)
         {
             Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController)); 
@@ -215,26 +230,26 @@ namespace OSCTools.OSCmooth.Util
                 Directory.CreateDirectory(directory);
             }
 
-            string[] guid = (AssetDatabase.FindAssets(paramName + "-1" + "Smoother.anim"));
+            string[] guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "-1" + "Smoother.anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClipInit, directory + paramName + "-1" + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "-1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
             else
             {
                 AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
-                AssetDatabase.CreateAsset(_animationClipInit, directory + paramName + "-1" + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "-1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
-            guid = (AssetDatabase.FindAssets(paramName + "1" + smoothSuffix + ".anim"));
+            guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "1" + smoothSuffix + ".anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClipFinal, directory + paramName + "1" + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipFinal, directory + NameNoSymbol(paramName) + "1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -242,7 +257,7 @@ namespace OSCTools.OSCmooth.Util
             {
 
                 AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
-                AssetDatabase.CreateAsset(_animationClipFinal, "Assets/OSCmooth/Generated/Anims/" + paramName + "1" + smoothSuffix + "_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipFinal, "Assets/OSCmooth/Generated/Anims/" + NameNoSymbol(paramName) + "1" + smoothSuffix + "_" + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 

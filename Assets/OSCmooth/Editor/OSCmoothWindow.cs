@@ -22,8 +22,13 @@ namespace OSCTools.OSCmooth
 
         private bool _showParameters = true;
         private bool _showGlobalConfiguration = false;
-        private bool _writeDefaults = false;
+        private bool _writeDefaults = true;
         private Vector2 paramMenuScroll;
+
+        readonly public string[] binarySizeOptions = new string[]
+        {
+            "OFF","2","4","8","16","32"
+        };
 
         //readonly private string[] _humanoidLayers = { "Base", "Additive", "Gesture", "Action", "FX" };
 
@@ -163,7 +168,9 @@ namespace OSCTools.OSCmooth
                                 localSmoothness = _basisConfigurationParameter.localSmoothness,
                                 remoteSmoothness = _basisConfigurationParameter.remoteSmoothness,
                                 flipInputOutput = _basisConfigurationParameter.flipInputOutput,
-                                convertToProxy = _basisConfigurationParameter.convertToProxy
+                                convertToProxy = _basisConfigurationParameter.convertToProxy,
+                                binarySizeSelection = _basisConfigurationParameter.binarySizeSelection,
+                                combinedParameter = _basisConfigurationParameter.combinedParameter
                             });
                         }
                     }
@@ -254,7 +261,9 @@ namespace OSCTools.OSCmooth
                         localSmoothness = _basisConfigurationParameter.localSmoothness,
                         remoteSmoothness = _basisConfigurationParameter.remoteSmoothness,
                         flipInputOutput = _basisConfigurationParameter.flipInputOutput,
-                        convertToProxy = _basisConfigurationParameter.convertToProxy
+                        convertToProxy = _basisConfigurationParameter.convertToProxy,
+                        binarySizeSelection = _basisConfigurationParameter.binarySizeSelection,
+                        combinedParameter = _basisConfigurationParameter.combinedParameter
                     };
                     _parameterAsset.parameters.Add(param);
 
@@ -343,6 +352,8 @@ namespace OSCTools.OSCmooth
             float remoteSmoothness = parameter.remoteSmoothness;
             bool convertToProxy = parameter.convertToProxy;
             bool flipIO = parameter.flipInputOutput;
+            int binarySizeSelection = parameter.binarySizeSelection;
+            bool combinedParameter = parameter.combinedParameter;
 
             EditorGUI.BeginChangeCheck();
             {
@@ -389,6 +400,35 @@ namespace OSCTools.OSCmooth
                     ),
                     flipIO
                 );
+
+                binarySizeSelection = EditorGUILayout.Popup
+                (
+                    new GUIContent
+                    (
+                        "Binary Resolution",
+                        "How many steps a Binary Parameter can make. Higher values are more accurate, " +
+                        "while lower values are more economic for parameter space. Recommended to use a " +
+                        "Resolution of 16 or less for more space savings."
+                    ),
+                    binarySizeSelection,
+                    binarySizeOptions
+                );
+
+
+                combinedParameter = EditorGUILayout.Toggle
+                (
+                    new GUIContent
+                    (
+                        "Combined Parameter",
+                        "Does this parameter go from positive to negative? " +
+                        "This option will add an extra bool to keep track of the " +
+                        "positive/negative of the parameter."
+                    ),
+                    combinedParameter
+                );
+                
+
+
             }
             if (EditorGUI.EndChangeCheck()) {
                 Undo.RecordObject(_parameterAsset, "Change Parameter Values");
@@ -396,6 +436,8 @@ namespace OSCTools.OSCmooth
                 parameter.remoteSmoothness = remoteSmoothness;
                 parameter.convertToProxy = convertToProxy;
                 parameter.flipInputOutput = flipIO;
+                parameter.binarySizeSelection = binarySizeSelection;
+                parameter.combinedParameter = combinedParameter;
             }
 
             EditorGUILayout.BeginHorizontal();

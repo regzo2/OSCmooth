@@ -24,7 +24,7 @@ namespace OSCTools.OSCmooth.Types
         public bool convertToProxy = true;
 
         // Resolution of parameters for binaries and disable binary
-        public int binarySizeSelection = 3;
+        public int binarySizeSelection = 0;
         // Combined parameter for positive and negative
         public bool combinedParameter = false;
 

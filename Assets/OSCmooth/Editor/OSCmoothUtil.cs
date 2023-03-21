@@ -28,7 +28,7 @@ namespace OSCTools.OSCmooth.Util
 
         public static void CleanAnimatorBlendTreeBloat(AnimatorController animatorController, string filter)
         {
-            Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController)); 
+            Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController));
 
             foreach (Object asset in animatorAssets)
             {
@@ -41,6 +41,7 @@ namespace OSCTools.OSCmooth.Util
                 }
             }
         }
+
         public static void RenameAllStateMachineInstancesOfBlendParameter(AnimatorController animatorController, string initParameter, string newParameter)
         {
             Object[] animatorAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(animatorController));
@@ -49,7 +50,7 @@ namespace OSCTools.OSCmooth.Util
             {
                 if (asset?.GetType() == typeof(BlendTree))
                 {
-                    if(((BlendTree)asset).blendParameter == initParameter)
+                    if (((BlendTree)asset).blendParameter == initParameter)
                         ((BlendTree)asset).blendParameter = newParameter;
 
                     if (((BlendTree)asset).blendParameterY == initParameter)
@@ -131,7 +132,7 @@ namespace OSCTools.OSCmooth.Util
 
             foreach (var oscmParam in OSCmoothFilters.ParameterExtensions)
             {
-                foreach (var stateParam in stateParams) 
+                foreach (var stateParam in stateParams)
                 {
                     if (stateParam.Contains(oscmParam))
                     {
@@ -151,7 +152,7 @@ namespace OSCTools.OSCmooth.Util
                     continue;
                 }
                 i++;
-            }          
+            }
         }
 
         public static void RemoveContainingLayersInController(string name, AnimatorController animatorController)
@@ -188,7 +189,7 @@ namespace OSCTools.OSCmooth.Util
                 defaultWeight = 1f
             };
 
-            CleanAnimatorBlendTreeBloat(animatorController,  "OSCm_");
+            CleanAnimatorBlendTreeBloat(animatorController, "OSCm_");
 
             // Store Layer into Animator Controller, as creating a Layer object is not serialized unless we store it inside an asset.
             if (AssetDatabase.GetAssetPath(animatorController) != string.Empty)
@@ -215,7 +216,7 @@ namespace OSCTools.OSCmooth.Util
             long id;
 
             AssetDatabase.TryGetGUIDAndLocalFileIdentifier(animatorController, out animatorGUID, out id);
-            
+
             AnimationClip _animationClipInit = new AnimationClip();
             AnimationClip _animationClipFinal = new AnimationClip();
 
@@ -261,7 +262,7 @@ namespace OSCTools.OSCmooth.Util
                 AssetDatabase.SaveAssets();
             }
 
-            return new AnimationClip[]{ _animationClipInit, _animationClipFinal };
+            return new AnimationClip[] { _animationClipInit, _animationClipFinal };
         }
 
         private static void SaveAnimationAsset(ref AnimationClip clip, string name, string directory)
@@ -302,7 +303,7 @@ namespace OSCTools.OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = driveBase ? paramName: proxyPrefix + paramName,
+                blendParameter = driveBase ? paramName : proxyPrefix + paramName,
                 name = "OSCm_Driver",
                 useAutomaticThresholds = false
             };
@@ -327,5 +328,126 @@ namespace OSCTools.OSCmooth.Util
 
             return rootTree;
         }
+
+        public static BlendTree CreateBinaryBlendTree(AnimatorController animatorController, AnimatorStateMachine stateMachine, string paramName, string directory, int binarySizeSelection)
+        {
+
+            //Create Direct Blendtree Root to for each binary parameter
+            BlendTree decodeBinaryRoot = new BlendTree
+            {
+                blendType = BlendTreeType.Direct,
+                hideFlags = HideFlags.HideInHierarchy,
+                name = "Binary_" + paramName + "_Root",
+                useAutomaticThresholds = false
+            };
+
+            List<ChildMotion> childBinaryPositiveDecode = new List<ChildMotion>();
+
+            // Go through binary steps and create each child to eventually stuff into the Direct BlendTrees.           
+            for (int i = 0; i < binarySizeSelection; i++)
+            {
+                // Create each binary step decode layer. This using type casting of bools to float. Parameters will be bools but will be floats in the animator.
+                // This is way to take typically transition type binaries and stuff them inside direct blendtree to reduce the visual overhead with using binaries in layers.
+                // There is 20% performance gain by stuffing into direct blend trees.
+                var decodeBinary = CreateBinaryDecode(animatorController, stateMachine, paramName, directory, i, binarySizeSelection);
+
+                childBinaryPositiveDecode.Add(new ChildMotion
+                {
+                    directBlendParameter = "OSCm/BlendSet",
+                    motion = decodeBinary,
+                    timeScale = 1
+                });
+
+            }
+
+            decodeBinaryRoot.children = childBinaryPositiveDecode.ToArray();
+
+            AssetDatabase.AddObjectToAsset(decodeBinaryRoot, AssetDatabase.GetAssetPath(animatorController));
+
+            AssetDatabase.SaveAssets();
+
+            return decodeBinaryRoot;
+        }
+
+        public static AnimationClip[] CreateBinaryAnimation(AnimatorController animatorController, string paramName, string directory, float weight = 1)
+        {
+            string animatorGUID;
+            long id;
+
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(animatorController, out animatorGUID, out id);
+
+            AnimationClip _animationClipInit = new AnimationClip();
+            AnimationClip _animationClipFinal = new AnimationClip();
+
+            AnimationCurve _curvesInit = new AnimationCurve(new Keyframe(0.0f, 0.0f));
+            AnimationCurve _curvesFinal = new AnimationCurve(new Keyframe(0.0f, weight));
+
+            _animationClipInit.SetCurve("", typeof(Animator), paramName, _curvesInit);
+            _animationClipFinal.SetCurve("", typeof(Animator), paramName, _curvesFinal);
+
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            string[] guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "False.anim"));
+
+            if (guid.Length == 0)
+            {
+                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "_False_" + animatorGUID + ".anim");
+                AssetDatabase.SaveAssets();
+            }
+
+            else
+            {
+                AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
+                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "_False_" + animatorGUID + ".anim");
+                AssetDatabase.SaveAssets();
+            }
+
+            guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "_True.anim"));
+
+            if (guid.Length == 0)
+            {
+                AssetDatabase.CreateAsset(_animationClipFinal, directory + NameNoSymbol(paramName) + "_True_" + animatorGUID + ".anim");
+                AssetDatabase.SaveAssets();
+            }
+
+            else
+            {
+
+                AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
+                AssetDatabase.CreateAsset(_animationClipFinal, "Assets/Binary/Generated/Binary/" + NameNoSymbol(paramName) + "_True_" + animatorGUID + ".anim");
+                AssetDatabase.SaveAssets();
+            }
+
+            return new AnimationClip[] { _animationClipInit, _animationClipFinal };
+        }
+
+        public static BlendTree CreateBinaryDecode(AnimatorController animatorController, AnimatorStateMachine stateMachine, string paramName, string directory, int binaryPow, int binarySize)
+        {
+
+            ParameterUtil.CheckAndCreateParameter(paramName + Mathf.Pow(2,binaryPow).ToString(), animatorController, AnimatorControllerParameterType.Float);
+
+            BlendTree decodeBinary = new BlendTree
+            {
+                blendType = BlendTreeType.Simple1D,
+                hideFlags = HideFlags.HideInHierarchy,
+                blendParameter = paramName + Mathf.Pow(2, binaryPow).ToString(),
+                name = "Binary_" + paramName + "_Decode_" + Mathf.Pow(2, binaryPow).ToString(),
+                useAutomaticThresholds = false
+            };
+
+            // Create Decode anims and weight per binary
+            AnimationClip[] decodeAnims = AnimUtil.CreateBinaryAnimation(animatorController, paramName, directory, 0.5f * Mathf.Pow(2, binaryPow + 1) / (Mathf.Pow(2, binarySize) - 1f));
+            decodeBinary.AddChild(decodeAnims[0], 0f);
+            decodeBinary.AddChild(decodeAnims[1], 1f);
+
+            AssetDatabase.AddObjectToAsset(decodeBinary, AssetDatabase.GetAssetPath(animatorController));
+
+            return decodeBinary;
+
+        }
+
     }
 }

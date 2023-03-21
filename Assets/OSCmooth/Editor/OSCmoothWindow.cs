@@ -22,7 +22,6 @@ namespace OSCTools.OSCmooth
 
         private bool _showParameters = true;
         private bool _showGlobalConfiguration = false;
-        private bool _writeDefaults = true;
         private Vector2 paramMenuScroll;
 
         readonly public string[] binarySizeOptions = new string[]
@@ -101,11 +100,11 @@ namespace OSCTools.OSCmooth
                 //    false
                 //);
 
-                //if (_parameterAsset == null)
-                //    _parameterAsset = ScriptableObject.CreateInstance<OSCmoothLayer>();
+                if (_parameterAsset == null)
+                    _parameterAsset = ScriptableObject.CreateInstance<OSCmoothLayer>();
 
-                //if (_basisConfigurationParameter == null)
-                //    _basisConfigurationParameter = new OSCmoothParameter();
+                if (_basisConfigurationParameter == null)
+                    _basisConfigurationParameter = new OSCmoothParameter();
 
                 //EditorGUILayout.BeginHorizontal();
                 //GUILayout.FlexibleSpace();
@@ -127,17 +126,6 @@ namespace OSCTools.OSCmooth
                 //    AssetDatabase.SaveAssets();
                 //}
 
-                //EditorGUILayout.EndHorizontal();
-
-                _writeDefaults = EditorGUILayout.Toggle
-                (
-                    new GUIContent
-                    (
-                        "Write Defaults",
-                        "Sets whether the generated OSCmooth layer will have write defaults on or off. Set true for WD on, false for WD off"
-                    ),
-                    _writeDefaults
-                );
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));
 
@@ -293,10 +281,11 @@ namespace OSCTools.OSCmooth
 
                     OSCmoothAnimationHandler._animatorController = _animatorController;
                     OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
-                    OSCmoothAnimationHandler._writeDefaults = _writeDefaults;
-                    OSCmoothAnimationHandler._animExportDirectory = "Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + "/";
+                    OSCmoothAnimationHandler._animExportDirectory = "Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID + "/";
+                    OSCmoothAnimationHandler._binaryExportDirectory = "Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID + "/";
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Apply OSCmooth to Layer");
+                    OSCmoothAnimationHandler.CreateBinaryLayer();
                     OSCmoothAnimationHandler.CreateSmoothAnimationLayer();
                 }
 
@@ -321,10 +310,14 @@ namespace OSCTools.OSCmooth
                     OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Revert OSCmooth in Layer");
+                    OSCmoothAnimationHandler.RemoveAllBinaryFromController();
                     OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
 
-                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID);
-                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + ".meta");
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID);
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID + ".meta");
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID);
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID + ".meta");
+
 
                     AssetDatabase.Refresh();
                 }

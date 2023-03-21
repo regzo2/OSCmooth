@@ -10,7 +10,7 @@ namespace OSCTools.OSCmooth
     {
         public static readonly string[] BlackList =
         {
-            "OSCm/", "IsLocal", "Smooth", "Proxy", "Proxy/", "_Float", "_Normalizer", "_FTI", "OSCm_BlendSet", "BlendSet", "Blend", "Binary"
+            "OSCm/", "IsLocal", "Smooth", "Proxy", "Proxy/", "_Float", "_Normalizer", "_FTI", "OSCm_BlendSet", "BlendSet", "Blend", "Binary/"
         };
         public static readonly string[] AllLayerNames =
         {

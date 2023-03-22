@@ -432,7 +432,7 @@ namespace OSCTools.OSCmooth.Util
             return decodeBinaryRoot;
         }
 
-        public static AnimationClip[] CreateBinaryAnimation(AnimatorController animatorController, string paramName, string directory, float weight = 1)
+        public static AnimationClip[] CreateBinaryAnimation(AnimatorController animatorController, string paramName, string directory, float weight = 1, int step = 1)
         {
             string animatorGUID;
             long id;
@@ -453,26 +453,27 @@ namespace OSCTools.OSCmooth.Util
                 Directory.CreateDirectory(directory);
             }
 
-            string[] guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "False.anim"));
+            string[] guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "_FALSE_" + step.ToString() + "_" + (weight < 0 ? "Negative_" : "Positive_") + animatorGUID + ".anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "_False_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "_False_" + step.ToString() + "_" + (weight < 0 ? "Negative_" : "Positive_") + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
             else
             {
                 AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid[0]));
-                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "_False_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipInit, directory + NameNoSymbol(paramName) + "_False_" + step.ToString() + "_" + (weight < 0 ? "Negative_" : "Positive_") + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
+
             }
 
-            guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "_True.anim"));
+            guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "_True_" + step.ToString() + (weight < 0 ? "Negative_" : "Positive_") + animatorGUID + ".anim"));
 
             if (guid.Length == 0)
             {
-                AssetDatabase.CreateAsset(_animationClipFinal, directory + NameNoSymbol(paramName) + "_True_" + animatorGUID + ".anim");
+                AssetDatabase.CreateAsset(_animationClipFinal, directory + NameNoSymbol(paramName) + "_True_" + step.ToString() + "_" + (weight < 0 ? "Negative_" : "Positive_") + animatorGUID + ".anim");
                 AssetDatabase.SaveAssets();
             }
 
@@ -502,7 +503,7 @@ namespace OSCTools.OSCmooth.Util
             };
 
             // Create Decode anims and weight per binary
-            AnimationClip[] decodeAnims = AnimUtil.CreateBinaryAnimation(animatorController, paramName, directory, (negative ? -0.5f : 0.5f) * Mathf.Pow(2, binaryPow + 1) / (Mathf.Pow(2, binarySize) - 1f));
+            AnimationClip[] decodeAnims = AnimUtil.CreateBinaryAnimation(animatorController, paramName, directory, (negative ? -0.5f : 0.5f) * Mathf.Pow(2, binaryPow + 1) / (Mathf.Pow(2, binarySize) - 1f), binaryPow);
             decodeBinary.AddChild(decodeAnims[0], 0f);
             decodeBinary.AddChild(decodeAnims[1], 1f);
 

@@ -26,7 +26,7 @@ namespace OSCTools.OSCmooth
 
         readonly public string[] binarySizeOptions = new string[]
         {
-            "OFF","2","4","8","16","32"
+            "OFF","2 (1 Bit)","4 (2 Bit)","8 (3 Bit)","16 (4 Bit)","32 (5 Bit)", "64 (6 Bit)", "128 (7 Bit)"
         };
 
         //readonly private string[] _humanoidLayers = { "Base", "Additive", "Gesture", "Action", "FX" };
@@ -340,7 +340,7 @@ namespace OSCTools.OSCmooth
             );
 
             EditorGUI.indentLevel = 3;
-            EditorGUIUtility.labelWidth = 200;
+            EditorGUIUtility.labelWidth = 220;
 
             float localSmoothness = parameter.localSmoothness;
             float remoteSmoothness = parameter.remoteSmoothness;
@@ -413,7 +413,7 @@ namespace OSCTools.OSCmooth
                 (
                     new GUIContent
                     (
-                        "Combined Parameter",
+                        "Combined Parameter (+1 Bit)",
                         "Does this parameter go from positive to negative? " +
                         "This option will add an extra bool to keep track of the " +
                         "positive/negative of the parameter."

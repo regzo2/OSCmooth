@@ -76,7 +76,7 @@ namespace OSCTools.OSCmooth.Animation
             foreach (OSCmoothParameter p in _parameters)
             {
                                 
-                var decodeBinary = AnimUtil.CreateBinaryBlendTree(_animatorController, animLayer.stateMachine, p.paramName, _binaryExportDirectory, p.binarySizeSelection);
+                var decodeBinary = AnimUtil.CreateBinaryBlendTree(_animatorController, animLayer.stateMachine, p.paramName, _binaryExportDirectory, p.binarySizeSelection, p.combinedParameter);
                     
 
                 childBinary.Add(new ChildMotion

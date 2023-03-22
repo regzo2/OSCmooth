@@ -285,6 +285,9 @@ namespace OSCTools.OSCmooth
                     OSCmoothAnimationHandler._binaryExportDirectory = "Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID + "/";
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Apply OSCmooth to Layer");
+
+                    OSCmoothAnimationHandler.RemoveAllBinaryFromController();
+                    OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
                     OSCmoothAnimationHandler.CreateBinaryLayer();
                     OSCmoothAnimationHandler.CreateSmoothAnimationLayer();
                 }

@@ -26,15 +26,11 @@ namespace OSCTools.OSCmooth.Animation
         
         public static void RemoveAllBinaryFromController()
         {
-            AnimUtil.RevertStateMachineParameters(_animatorController);
-            AnimUtil.RemoveExtendedParametersInController("Binary", _animatorController);
-            AnimUtil.RemoveContainingLayersInController("Binary", _animatorController);
+            
         }
               
         public static void CreateSmoothAnimationLayer()
         {
-            // Cleanup Animator before applying OSCmooth:
-            OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
 
             // Creating new OSCmooth setup.
             AnimatorControllerLayer animLayer;
@@ -132,13 +128,11 @@ namespace OSCTools.OSCmooth.Animation
         
         public static void CreateBinaryLayer()
         {
-            // Cleannup Animator before apply Binaries
-            OSCmoothAnimationHandler.RemoveAllBinaryFromController();
 
             // Creating new Binary setup.
             AnimatorControllerLayer animLayer;
 
-            animLayer = AnimUtil.CreateAnimLayerInController("_Binary_Parameters_Gen", _animatorController);
+            animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Binary_Gen", _animatorController);
 
             // Creating a Direct BlendTree that will hold all of the binary decode driver animations. This is to effectively create a 'sublayer'
             // system within the Direct BlendTree to tidy up the animator base layers from bloating up visually.

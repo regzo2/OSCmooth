@@ -229,6 +229,22 @@ namespace OSCTools.OSCmooth.Util
             {
                 Directory.CreateDirectory(directory);
             }
+            
+            // Create paths for v2/ params
+            string[] paramNameSplit = paramName.Split('/');
+            if (paramNameSplit.Length > 1)
+            {
+                string nestedDirectory = directory;
+                for (int i = 0; i < paramNameSplit.Length - 1; i++)
+                {
+                    nestedDirectory += paramNameSplit[i] + "/";
+                    if (!Directory.Exists(nestedDirectory))
+                    {
+                        Directory.CreateDirectory(nestedDirectory);
+                    }
+                }
+            }
+
 
             string[] guid = (AssetDatabase.FindAssets(NameNoSymbol(paramName) + "-1" + "Smoother.anim"));
 

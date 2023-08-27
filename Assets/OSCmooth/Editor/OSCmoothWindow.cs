@@ -126,6 +126,7 @@ namespace OSCTools.OSCmooth
                     AssetDatabase.SaveAssets();
                 }
 
+                EditorGUILayout.EndHorizontal();
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));
 

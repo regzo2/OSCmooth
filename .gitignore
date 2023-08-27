@@ -396,3 +396,5 @@ VRC.Enums*
 /Assets
 /Assembly-CSharp.csproj
 /Assembly-CSharp-Editor.csproj
+/Packages
+*.csproj

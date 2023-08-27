@@ -41,13 +41,13 @@ namespace OSCTools.OSCmooth
             window.Show();
         }
 
-        private void OnGUI() 
+        private void OnGUI()
         {
             DrawGUI();
         }
-        
-        void DrawGUI() 
-        { 
+
+        void DrawGUI()
+        {
             _avDescriptor = (VRCAvatarDescriptor)EditorGUILayout.ObjectField
             (
                 new GUIContent
@@ -71,7 +71,7 @@ namespace OSCTools.OSCmooth
                 // Making sure the selector never goes beyond the length of the selection
                 if (_layerSelect > layers.Count)
                     _layerSelect = layers.Count - 1;
- 
+
                 _layerSelect = EditorGUILayout.Popup
                 (
                     new GUIContent
@@ -181,8 +181,10 @@ namespace OSCTools.OSCmooth
                 EditorGUI.indentLevel = 0;
 
                 _showParameters = EditorGUILayout.Foldout(_showParameters, "Parameter Configuration");
-                if (_parameterAsset.parameters != null && _parameterAsset.parameters.Count() > 0) {
-                    if (GUILayout.Button("Remove All")) {
+                if (_parameterAsset.parameters != null && _parameterAsset.parameters.Count() > 0)
+                {
+                    if (GUILayout.Button("Remove All"))
+                    {
                         Undo.RecordObject(_parameterAsset, "Remove All Parameters");
                         _parameterAsset.parameters = new List<OSCmoothParameter>();
                         return;
@@ -193,7 +195,7 @@ namespace OSCTools.OSCmooth
 
                 paramMenuScroll = EditorGUILayout.BeginScrollView(paramMenuScroll);
                 if (_showParameters && _parameterAsset != null)
-                {                    
+                {
                     foreach (OSCmoothParameter parameter in _parameterAsset.parameters)
                     {
                         if (parameter == null)
@@ -202,7 +204,8 @@ namespace OSCTools.OSCmooth
                         EditorGUI.indentLevel = 0;
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            if (GUILayout.Button(parameter.isVisible ? "v" : ">", GUILayout.Width(20))) {
+                            if (GUILayout.Button(parameter.isVisible ? "v" : ">", GUILayout.Width(20)))
+                            {
                                 Undo.RecordObject(_parameterAsset, "Set Parameter Visible");
                                 parameter.isVisible = !parameter.isVisible;
                             }
@@ -210,14 +213,15 @@ namespace OSCTools.OSCmooth
                             EditorGUI.BeginChangeCheck();
                             string paramName = parameter.paramName;
                             paramName = EditorGUILayout.TextField(paramName);
-                            if (EditorGUI.EndChangeCheck() && parameter != null) {
+                            if (EditorGUI.EndChangeCheck() && parameter != null)
+                            {
                                 Undo.RecordObject(_parameterAsset, "Change Parameter Name");
                                 parameter.paramName = paramName;
                                 return;
                             }
 
                             GUI.color = Color.red;
-                            if (GUILayout.Button("X", GUILayout.Width(40))) 
+                            if (GUILayout.Button("X", GUILayout.Width(40)))
                             {
                                 Undo.RecordObject(_parameterAsset, "Remove Parameter");
                                 _parameterAsset.parameters.Remove(parameter);
@@ -227,7 +231,8 @@ namespace OSCTools.OSCmooth
                             GUI.color = Color.white;
                         }
                         EditorGUI.indentLevel = 2;
-                        if (parameter.isVisible) {
+                        if (parameter.isVisible)
+                        {
                             DrawParameterConfiguration(parameter);
                         }
                     }
@@ -423,11 +428,12 @@ namespace OSCTools.OSCmooth
                     ),
                     combinedParameter
                 );
-                
+
 
 
             }
-            if (EditorGUI.EndChangeCheck()) {
+            if (EditorGUI.EndChangeCheck())
+            {
                 Undo.RecordObject(_parameterAsset, "Change Parameter Values");
                 parameter.localSmoothness = localSmoothness;
                 parameter.remoteSmoothness = remoteSmoothness;

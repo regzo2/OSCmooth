@@ -54,7 +54,7 @@ namespace OSCTools.OSCmooth.Types
         public List<OSCmoothParameter> parameters;
         public OSCmoothParameter configuration;
 
-        public OSCmoothLayer() 
+        public OSCmoothLayer()
         {
             parameters = new List<OSCmoothParameter>();
             configuration = new OSCmoothParameter();

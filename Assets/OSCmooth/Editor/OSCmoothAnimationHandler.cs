@@ -18,17 +18,17 @@ namespace OSCTools.OSCmooth.Animation
         public static string _binaryExportDirectory;
 
         public static void RemoveAllOSCmoothFromController()
-        {            
+        {
             AnimUtil.RevertStateMachineParameters(_animatorController);
             AnimUtil.RemoveExtendedParametersInController("OSCm", _animatorController);
             AnimUtil.RemoveContainingLayersInController("OSCm", _animatorController);
         }
-        
+
         public static void RemoveAllBinaryFromController()
         {
-            
+
         }
-              
+
         public static void CreateSmoothAnimationLayer()
         {
 
@@ -105,7 +105,7 @@ namespace OSCTools.OSCmooth.Animation
                 }
 
                 var motionLocal = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Local/", "SmootherWD", "OSCm/Proxy/", "Proxy");
-                var motionRemote = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Remote/", "SmootherRemoteWD", "OSCm/Proxy/", "Proxy");                
+                var motionRemote = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Remote/", "SmootherRemoteWD", "OSCm/Proxy/", "Proxy");
 
                 localChildMotion.Add(new ChildMotion
                 {
@@ -125,7 +125,7 @@ namespace OSCTools.OSCmooth.Animation
             basisLocalBlendTree.children = localChildMotion.ToArray();
             basisRemoteBlendTree.children = remoteChildMotion.ToArray();
         }
-        
+
         public static void CreateBinaryLayer()
         {
 
@@ -171,7 +171,7 @@ namespace OSCTools.OSCmooth.Animation
 
                 var decodeBinary = AnimUtil.CreateBinaryBlendTree(_animatorController, animLayer.stateMachine, p.paramName, _binaryExportDirectory, p.binarySizeSelection, p.combinedParameter);
 
-                if(p.binarySizeSelection != 0)
+                if (p.binarySizeSelection != 0)
                 {
                     childBinary.Add(new ChildMotion
                     {
@@ -180,7 +180,7 @@ namespace OSCTools.OSCmooth.Animation
                         timeScale = 1
                     });
                 }
-                
+
 
             }
 

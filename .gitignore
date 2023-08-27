@@ -393,8 +393,8 @@ VRC.Enums*
 /Assets/Scenes/SampleScene.unity
 /Assets/Scenes
 /Assets/OSCmooth/Generated/Anims/Animator_354a5319244b7d64ca734626cd690e47
-/Assets
 /Assembly-CSharp.csproj
 /Assembly-CSharp-Editor.csproj
 /Packages
 *.csproj
+.history

@@ -1,4 +1,4 @@
-# OSCmooth
+# OSCmooth [![Github Releases](https://img.shields.io/github/downloads/YukihoAA/OSCmooth/total.svg)](https://github.com/YukihoAA/OSCmooth/releases)
 > Create smoothed out animations that mimics IK Sync on avatars for OSC controlled parameters for VRChat.
 
 https://user-images.githubusercontent.com/74634856/183157866-37a20b11-20b5-4cfe-a356-e2acfea23a68.mp4

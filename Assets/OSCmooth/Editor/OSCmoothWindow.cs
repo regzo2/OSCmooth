@@ -85,20 +85,20 @@ namespace OSCTools.OSCmooth
                     layers.ToArray()
                 );
 
-                //EditorGUILayout.Space(10f);
+                EditorGUILayout.Space(10f);
 
-                //_parameterAsset = (OSCmoothLayer)EditorGUILayout.ObjectField
-                //(
-                //    new GUIContent
-                //    (
-                //        "Config",
-                //        "A preset configuration that stores Parameter Configuration data. " +
-                //        "This is intended for saving configurations for use later or sharing."
-                //    ),
-                //    _parameterAsset,
-                //    typeof(OSCmoothLayer),
-                //    false
-                //);
+                _parameterAsset = (OSCmoothLayer)EditorGUILayout.ObjectField
+                (
+                   new GUIContent
+                   (
+                       "Config",
+                       "A preset configuration that stores Parameter Configuration data. " +
+                       "This is intended for saving configurations for use later or sharing."
+                   ),
+                   _parameterAsset,
+                   typeof(OSCmoothLayer),
+                   false
+                );
 
                 if (_parameterAsset == null)
                     _parameterAsset = ScriptableObject.CreateInstance<OSCmoothLayer>();
@@ -106,25 +106,25 @@ namespace OSCTools.OSCmooth
                 if (_basisConfigurationParameter == null)
                     _basisConfigurationParameter = new OSCmoothParameter();
 
-                //EditorGUILayout.BeginHorizontal();
-                //GUILayout.FlexibleSpace();
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
 
-                //if (GUILayout.Button
-                //(
-                //    new GUIContent
-                //    (
-                //        "Save Config",
-                //        "Saves Parameter configuration into a JSON readable text file."
-                //    ),
-                //    GUILayout.MaxWidth((float)Screen.width - 159f)
-                //))
-                //{
-                //    if (AssetDatabase.GetAssetPath(_parameterAsset) == string.Empty)
-                //        AssetDatabase.CreateAsset(_parameterAsset, EditorUtility.SaveFilePanelInProject("Save OSCmooth Configuration", "OSCmoothConfig", "asset", ""));
+                if (GUILayout.Button
+                (
+                   new GUIContent
+                   (
+                       "Save Config",
+                       "Saves Parameter configuration into a JSON readable text file."
+                   ),
+                   GUILayout.MaxWidth((float)Screen.width - 159f)
+                ))
+                {
+                    if (AssetDatabase.GetAssetPath(_parameterAsset) == string.Empty)
+                        AssetDatabase.CreateAsset(_parameterAsset, EditorUtility.SaveFilePanelInProject("Save OSCmooth Configuration", "OSCmoothConfig", "asset", ""));
 
-                //    EditorUtility.SetDirty(_parameterAsset);
-                //    AssetDatabase.SaveAssets();
-                //}
+                    EditorUtility.SetDirty(_parameterAsset);
+                    AssetDatabase.SaveAssets();
+                }
 
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));

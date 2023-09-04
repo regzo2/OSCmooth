@@ -22,8 +22,12 @@ namespace OSCTools.OSCmooth
 
         private bool _showParameters = true;
         private bool _showGlobalConfiguration = false;
-        private bool _writeDefaults = false;
         private Vector2 paramMenuScroll;
+
+        readonly public string[] binarySizeOptions = new string[]
+        {
+            "OFF","2 (1 Bit)","4 (2 Bit)","8 (3 Bit)","16 (4 Bit)","32 (5 Bit)", "64 (6 Bit)", "128 (7 Bit)"
+        };
 
         //readonly private string[] _humanoidLayers = { "Base", "Additive", "Gesture", "Action", "FX" };
 
@@ -37,12 +41,13 @@ namespace OSCTools.OSCmooth
             window.Show();
         }
 
-        private void OnGUI() 
+        private void OnGUI()
         {
             DrawGUI();
         }
-        void DrawGUI() 
-        { 
+
+        void DrawGUI()
+        {
             _avDescriptor = (VRCAvatarDescriptor)EditorGUILayout.ObjectField
             (
                 new GUIContent
@@ -66,7 +71,7 @@ namespace OSCTools.OSCmooth
                 // Making sure the selector never goes beyond the length of the selection
                 if (_layerSelect > layers.Count)
                     _layerSelect = layers.Count - 1;
- 
+
                 _layerSelect = EditorGUILayout.Popup
                 (
                     new GUIContent
@@ -84,15 +89,15 @@ namespace OSCTools.OSCmooth
 
                 _parameterAsset = (OSCmoothLayer)EditorGUILayout.ObjectField
                 (
-                    new GUIContent
-                    (
-                        "Config",
-                        "A preset configuration that stores Parameter Configuration data. " +
-                        "This is intended for saving configurations for use later or sharing."
-                    ),
-                    _parameterAsset,
-                    typeof(OSCmoothLayer),
-                    false
+                   new GUIContent
+                   (
+                       "Config",
+                       "A preset configuration that stores Parameter Configuration data. " +
+                       "This is intended for saving configurations for use later or sharing."
+                   ),
+                   _parameterAsset,
+                   typeof(OSCmoothLayer),
+                   false
                 );
 
                 if (_parameterAsset == null)
@@ -106,12 +111,12 @@ namespace OSCTools.OSCmooth
 
                 if (GUILayout.Button
                 (
-                    new GUIContent
-                    (
-                        "Save Config",
-                        "Saves Parameter configuration into a JSON readable text file."
-                    ),
-                    GUILayout.MaxWidth((float)Screen.width - 159f)
+                   new GUIContent
+                   (
+                       "Save Config",
+                       "Saves Parameter configuration into a JSON readable text file."
+                   ),
+                   GUILayout.MaxWidth((float)Screen.width - 159f)
                 ))
                 {
                     if (AssetDatabase.GetAssetPath(_parameterAsset) == string.Empty)
@@ -122,16 +127,6 @@ namespace OSCTools.OSCmooth
                 }
 
                 EditorGUILayout.EndHorizontal();
-
-                _writeDefaults = EditorGUILayout.Toggle
-                (
-                    new GUIContent
-                    (
-                        "Write Defaults",
-                        "Sets whether the generated OSCmooth layer will have write defaults on or off. Set true for WD on, false for WD off"
-                    ),
-                    _writeDefaults
-                );
 
                 _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(_avDescriptor.baseAnimationLayers[_layerSelect].animatorController));
 
@@ -163,7 +158,9 @@ namespace OSCTools.OSCmooth
                                 localSmoothness = _basisConfigurationParameter.localSmoothness,
                                 remoteSmoothness = _basisConfigurationParameter.remoteSmoothness,
                                 flipInputOutput = _basisConfigurationParameter.flipInputOutput,
-                                convertToProxy = _basisConfigurationParameter.convertToProxy
+                                convertToProxy = _basisConfigurationParameter.convertToProxy,
+                                binarySizeSelection = _basisConfigurationParameter.binarySizeSelection,
+                                combinedParameter = _basisConfigurationParameter.combinedParameter
                             });
                         }
                     }
@@ -185,8 +182,10 @@ namespace OSCTools.OSCmooth
                 EditorGUI.indentLevel = 0;
 
                 _showParameters = EditorGUILayout.Foldout(_showParameters, "Parameter Configuration");
-                if (_parameterAsset.parameters != null && _parameterAsset.parameters.Count() > 0) {
-                    if (GUILayout.Button("Remove All")) {
+                if (_parameterAsset.parameters != null && _parameterAsset.parameters.Count() > 0)
+                {
+                    if (GUILayout.Button("Remove All"))
+                    {
                         Undo.RecordObject(_parameterAsset, "Remove All Parameters");
                         _parameterAsset.parameters = new List<OSCmoothParameter>();
                         return;
@@ -197,7 +196,7 @@ namespace OSCTools.OSCmooth
 
                 paramMenuScroll = EditorGUILayout.BeginScrollView(paramMenuScroll);
                 if (_showParameters && _parameterAsset != null)
-                {                    
+                {
                     foreach (OSCmoothParameter parameter in _parameterAsset.parameters)
                     {
                         if (parameter == null)
@@ -206,7 +205,8 @@ namespace OSCTools.OSCmooth
                         EditorGUI.indentLevel = 0;
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            if (GUILayout.Button(parameter.isVisible ? "v" : ">", GUILayout.Width(20))) {
+                            if (GUILayout.Button(parameter.isVisible ? "v" : ">", GUILayout.Width(20)))
+                            {
                                 Undo.RecordObject(_parameterAsset, "Set Parameter Visible");
                                 parameter.isVisible = !parameter.isVisible;
                             }
@@ -214,14 +214,15 @@ namespace OSCTools.OSCmooth
                             EditorGUI.BeginChangeCheck();
                             string paramName = parameter.paramName;
                             paramName = EditorGUILayout.TextField(paramName);
-                            if (EditorGUI.EndChangeCheck() && parameter != null) {
+                            if (EditorGUI.EndChangeCheck() && parameter != null)
+                            {
                                 Undo.RecordObject(_parameterAsset, "Change Parameter Name");
                                 parameter.paramName = paramName;
                                 return;
                             }
 
                             GUI.color = Color.red;
-                            if (GUILayout.Button("X", GUILayout.Width(40))) 
+                            if (GUILayout.Button("X", GUILayout.Width(40)))
                             {
                                 Undo.RecordObject(_parameterAsset, "Remove Parameter");
                                 _parameterAsset.parameters.Remove(parameter);
@@ -231,7 +232,8 @@ namespace OSCTools.OSCmooth
                             GUI.color = Color.white;
                         }
                         EditorGUI.indentLevel = 2;
-                        if (parameter.isVisible) {
+                        if (parameter.isVisible)
+                        {
                             DrawParameterConfiguration(parameter);
                         }
                     }
@@ -254,7 +256,9 @@ namespace OSCTools.OSCmooth
                         localSmoothness = _basisConfigurationParameter.localSmoothness,
                         remoteSmoothness = _basisConfigurationParameter.remoteSmoothness,
                         flipInputOutput = _basisConfigurationParameter.flipInputOutput,
-                        convertToProxy = _basisConfigurationParameter.convertToProxy
+                        convertToProxy = _basisConfigurationParameter.convertToProxy,
+                        binarySizeSelection = _basisConfigurationParameter.binarySizeSelection,
+                        combinedParameter = _basisConfigurationParameter.combinedParameter
                     };
                     _parameterAsset.parameters.Add(param);
 
@@ -283,10 +287,14 @@ namespace OSCTools.OSCmooth
 
                     OSCmoothAnimationHandler._animatorController = _animatorController;
                     OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
-                    OSCmoothAnimationHandler._writeDefaults = _writeDefaults;
-                    OSCmoothAnimationHandler._animExportDirectory = "Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + "/";
+                    OSCmoothAnimationHandler._animExportDirectory = "Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID + "/";
+                    OSCmoothAnimationHandler._binaryExportDirectory = "Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID + "/";
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Apply OSCmooth to Layer");
+
+                    OSCmoothAnimationHandler.RemoveAllBinaryFromController();
+                    OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
+                    OSCmoothAnimationHandler.CreateBinaryLayer();
                     OSCmoothAnimationHandler.CreateSmoothAnimationLayer();
                 }
 
@@ -311,10 +319,14 @@ namespace OSCTools.OSCmooth
                     OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Revert OSCmooth in Layer");
+                    OSCmoothAnimationHandler.RemoveAllBinaryFromController();
                     OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
 
-                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID);
-                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Anims/" + "Animator_" + animatorGUID + ".meta");
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID);
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID + ".meta");
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID);
+                    FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Binary/" + "Animator_" + animatorGUID + ".meta");
+
 
                     AssetDatabase.Refresh();
                 }
@@ -337,12 +349,14 @@ namespace OSCTools.OSCmooth
             );
 
             EditorGUI.indentLevel = 3;
-            EditorGUIUtility.labelWidth = 200;
+            EditorGUIUtility.labelWidth = 220;
 
             float localSmoothness = parameter.localSmoothness;
             float remoteSmoothness = parameter.remoteSmoothness;
             bool convertToProxy = parameter.convertToProxy;
             bool flipIO = parameter.flipInputOutput;
+            int binarySizeSelection = parameter.binarySizeSelection;
+            bool combinedParameter = parameter.combinedParameter;
 
             EditorGUI.BeginChangeCheck();
             {
@@ -389,13 +403,45 @@ namespace OSCTools.OSCmooth
                     ),
                     flipIO
                 );
+
+                binarySizeSelection = EditorGUILayout.Popup
+                (
+                    new GUIContent
+                    (
+                        "Binary Resolution",
+                        "How many steps a Binary Parameter can make. Higher values are more accurate, " +
+                        "while lower values are more economic for parameter space. Recommended to use a " +
+                        "Resolution of 16 or less for more space savings."
+                    ),
+                    binarySizeSelection,
+                    binarySizeOptions
+                );
+
+
+                combinedParameter = EditorGUILayout.Toggle
+                (
+                    new GUIContent
+                    (
+                        "Combined Parameter (+1 Bit)",
+                        "Does this parameter go from positive to negative? " +
+                        "This option will add an extra bool to keep track of the " +
+                        "positive/negative of the parameter."
+                    ),
+                    combinedParameter
+                );
+
+
+
             }
-            if (EditorGUI.EndChangeCheck()) {
+            if (EditorGUI.EndChangeCheck())
+            {
                 Undo.RecordObject(_parameterAsset, "Change Parameter Values");
                 parameter.localSmoothness = localSmoothness;
                 parameter.remoteSmoothness = remoteSmoothness;
                 parameter.convertToProxy = convertToProxy;
                 parameter.flipInputOutput = flipIO;
+                parameter.binarySizeSelection = binarySizeSelection;
+                parameter.combinedParameter = combinedParameter;
             }
 
             EditorGUILayout.BeginHorizontal();

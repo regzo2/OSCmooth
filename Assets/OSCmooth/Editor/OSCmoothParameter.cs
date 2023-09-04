@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,6 +23,11 @@ namespace OSCTools.OSCmooth.Types
         // WARNING. Please be considerate with this setting.
         public bool convertToProxy = true;
 
+        // Resolution of parameters for binaries and disable binary
+        public int binarySizeSelection = 0;
+        // Combined parameter for positive and negative
+        public bool combinedParameter = false;
+
         // for Editor window visibility
         public bool isVisible;
 
@@ -31,32 +36,15 @@ namespace OSCTools.OSCmooth.Types
         {
             this.paramName = paramName;
         }
-        public OSCmoothParameter(string paramName, float localSmoothness, float remoteSmoothness, bool convertToProxy, bool flipInputOutput)
+        public OSCmoothParameter(string paramName, float localSmoothness, float remoteSmoothness, bool convertToProxy, bool flipInputOutput, int binarySizeSelection, bool combinedParameter)
         {
             this.paramName = paramName;
             this.localSmoothness = localSmoothness;
             this.remoteSmoothness = remoteSmoothness;
             this.convertToProxy = convertToProxy;
             this.flipInputOutput = flipInputOutput;
-        }
-    }
-
-    [Serializable]
-    public class OSCmoothLayer : ScriptableObject
-    {
-        public List<OSCmoothParameter> parameters;
-        public OSCmoothParameter configuration;
-
-        public OSCmoothLayer() 
-        {
-            parameters = new List<OSCmoothParameter>();
-            configuration = new OSCmoothParameter();
-        }
-        public OSCmoothLayer(List<OSCmoothParameter> parameters, OSCmoothParameter configuration)
-        {
-            this.parameters = parameters;
-            this.configuration = configuration;
+            this.binarySizeSelection = binarySizeSelection;
+            this.combinedParameter = combinedParameter;
         }
     }
 }
-

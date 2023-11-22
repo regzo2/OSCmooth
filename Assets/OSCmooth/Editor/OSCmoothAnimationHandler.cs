@@ -6,6 +6,8 @@ using UnityEngine.Jobs;
 using OSCTools.OSCmooth.Util;
 using OSCTools.OSCmooth.Types;
 using System.Linq;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace OSCTools.OSCmooth.Animation
 {
@@ -19,14 +21,18 @@ namespace OSCTools.OSCmooth.Animation
 
         public static void RemoveAllOSCmoothFromController()
         {
-            AnimUtil.RevertStateMachineParameters(_animatorController);
-            AnimUtil.RemoveExtendedParametersInController("OSCm", _animatorController);
-            AnimUtil.RemoveContainingLayersInController("OSCm", _animatorController);
+            AnimUtil _handler = new AnimUtil(_animatorController, _binaryExportDirectory, _animExportDirectory);
+            _handler.RevertStateMachineParameters();
+            _handler.RemoveExtendedParametersInController("OSCm");
+            _handler.RemoveContainingLayersInController("OSCm");
         }
 
-        public static void RemoveAllBinaryFromController()
+        public static void CreateLayers()
         {
-
+            AssetDatabase.StartAssetEditing();
+            CreateBinaryLayer();
+            CreateSmoothAnimationLayer();
+            AssetDatabase.StopAssetEditing();
         }
 
         public static void CreateSmoothAnimationLayer()
@@ -34,8 +40,9 @@ namespace OSCTools.OSCmooth.Animation
 
             // Creating new OSCmooth setup.
             AnimatorControllerLayer animLayer;
+            AnimUtil _handler = new AnimUtil(_animatorController, _binaryExportDirectory, _animExportDirectory);
 
-            animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Smoothing_Gen", _animatorController);
+            animLayer = _handler.CreateAnimLayerInController("_OSCmooth_Smoothing_Gen");
 
             // Creating a Direct BlendTree that will hold all of the smooth driver animations. This is to effectively create a 'sublayer'
             // system within the Direct BlendTree to tidy up the animator base layers from bloating up visually.
@@ -80,7 +87,6 @@ namespace OSCTools.OSCmooth.Animation
                 useAutomaticThresholds = false
             };
 
-
             // Stuffing the BlendTrees into their designated state. Also stuffing them so that they
             // retain serialization.
             state[0].motion = basisLocalBlendTree;
@@ -89,55 +95,57 @@ namespace OSCTools.OSCmooth.Animation
             AssetDatabase.AddObjectToAsset(basisRemoteBlendTree, AssetDatabase.GetAssetPath(animLayer.stateMachine));
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-
             ParameterUtil.CheckAndCreateParameter("OSCm/BlendSet", _animatorController, AnimatorControllerParameterType.Float, 1f);
 
+            var localChildMotions = new List<ChildMotion>();
+            var remoteChildMotions = new List<ChildMotion>();
 
-            List<ChildMotion> localChildMotion = new List<ChildMotion>();
-            List<ChildMotion> remoteChildMotion = new List<ChildMotion>();
-
-            // Go through each parameter and create each child to eventually stuff into the Direct BlendTrees. 
+            int i = 0;
             foreach (OSCmoothParameter p in _parameters)
             {
+                EditorUtility.DisplayProgressBar("OSCmooth", "Creating Smoothing Direct BlendTree", (float)i++/_parameters.Count);
                 if (p.convertToProxy)
                 {
-                    AnimUtil.RenameAllStateMachineInstancesOfBlendParameter(_animatorController, p.paramName, "OSCm/Proxy/" + p.paramName);
+                    _handler.RenameAllStateMachineInstancesOfBlendParameter(p.paramName, "OSCm/Proxy/" + p.paramName);
                 }
 
-                var motionLocal = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.localSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Local/", "SmootherWD", "OSCm/Proxy/", "Proxy");
-                var motionRemote = AnimUtil.CreateSmoothingBlendTree(_animatorController, animLayer.stateMachine, p.remoteSmoothness, p.paramName, p.flipInputOutput, 1f, _animExportDirectory, "OSCm/Remote/", "SmootherRemoteWD", "OSCm/Proxy/", "Proxy");
+                var motionLocal = _handler.CreateSmoothingBlendTree(p.localSmoothness, p.paramName, "OSCm/Local/");
+                var motionRemote = _handler.CreateSmoothingBlendTree(p.remoteSmoothness, p.paramName, "OSCm/Remote/");
 
-                localChildMotion.Add(new ChildMotion
+                localChildMotions.Add(new ChildMotion
                 {
                     directBlendParameter = "OSCm/BlendSet",
                     motion = motionLocal,
                     timeScale = 1
                 });
 
-                remoteChildMotion.Add(new ChildMotion
+                remoteChildMotions.Add(new ChildMotion
                 {
                     directBlendParameter = "OSCm/BlendSet",
                     motion = motionRemote,
                     timeScale = 1,
                 });
             }
-
-            basisLocalBlendTree.children = localChildMotion.ToArray();
-            basisRemoteBlendTree.children = remoteChildMotion.ToArray();
+            EditorUtility.ClearProgressBar();
+            basisLocalBlendTree.children = localChildMotions.ToArray();
+            basisRemoteBlendTree.children = remoteChildMotions.ToArray();
+            AssetDatabase.SaveAssets();
         }
 
         public static void CreateBinaryLayer()
         {
+            // Check to see if we need to create the animation layer.
+            if (!_parameters.Any(p => p.binarySizeSelection > 0)) return;
 
             // Creating new Binary setup.
             AnimatorControllerLayer animLayer;
+            AnimUtil _handler = new AnimUtil(_animatorController, _binaryExportDirectory, _animExportDirectory);
 
-            animLayer = AnimUtil.CreateAnimLayerInController("_OSCmooth_Binary_Gen", _animatorController);
+            animLayer = _handler.CreateAnimLayerInController("_OSCmooth_Binary_Gen");
 
             // Creating a Direct BlendTree that will hold all of the binary decode driver animations. This is to effectively create a 'sublayer'
             // system within the Direct BlendTree to tidy up the animator base layers from bloating up visually.
             AnimatorState[] state = new AnimatorState[1];
-
 
             state[0] = animLayer.stateMachine.AddState("Binary_Parameters_Blendtree", new Vector3(30, 170, 0));
             state[0].writeDefaultValues = true;
@@ -150,7 +158,6 @@ namespace OSCTools.OSCmooth.Animation
                 hideFlags = HideFlags.HideInHierarchy,
                 name = "Binary_Root",
                 useAutomaticThresholds = false
-
             };
 
             // Stuffing the BlendTrees into their designated state. Also stuffing them so that they
@@ -159,33 +166,28 @@ namespace OSCTools.OSCmooth.Animation
             AssetDatabase.AddObjectToAsset(binaryTreeRoot, AssetDatabase.GetAssetPath(animLayer.stateMachine));
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-
             ParameterUtil.CheckAndCreateParameter("OSCm/BlendSet", _animatorController, AnimatorControllerParameterType.Float, 1f);
 
-
-            List<ChildMotion> childBinary = new List<ChildMotion>();
+            var childBinary = new List<ChildMotion>();
 
             // Go through each parameter and create each child to eventually stuff into the Direct BlendTrees. 
+            int i = 0;
             foreach (OSCmoothParameter p in _parameters)
             {
+                EditorUtility.DisplayProgressBar("OSCmooth", "Creating Binary Parameter Direct BlendTree", (float)i++/_parameters.Count);
+                if (p.binarySizeSelection == 0) return;
+                var decodeBinary = _handler.CreateBinaryBlendTree(p.paramName, p.binarySizeSelection, p.combinedParameter);
 
-                var decodeBinary = AnimUtil.CreateBinaryBlendTree(_animatorController, animLayer.stateMachine, p.paramName, _binaryExportDirectory, p.binarySizeSelection, p.combinedParameter);
-
-                if (p.binarySizeSelection != 0)
+                childBinary.Add(new ChildMotion
                 {
-                    childBinary.Add(new ChildMotion
-                    {
-                        directBlendParameter = "OSCm/BlendSet",
-                        motion = decodeBinary,
-                        timeScale = 1
-                    });
-                }
-
-
+                    directBlendParameter = "OSCm/BlendSet",
+                    motion = decodeBinary,
+                    timeScale = 1
+                });
             }
 
             binaryTreeRoot.children = childBinary.ToArray();
+            AssetDatabase.SaveAssets();
         }
-
     }
 }

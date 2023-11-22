@@ -1,4 +1,5 @@
 ﻿using BestHTTP.SecureProtocol.Org.BouncyCastle.Crypto.Parameters;
+using NUnit.Framework.Constraints;
 using OSCTools.OSCmooth.Types;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -305,11 +306,13 @@ namespace OSCTools.OSCmooth.Util
             // Create each binary step decode layer. Expression Parameters are bools and are implicitly cast as floats in the animator.
             // This creates one monolithic animation layer with all of the binary conversion logic.
 
+            string prefix = "OSCm/Binary/";
+
             var blendRootPara = "OSCm/BlendSet";
             if (combinedParameter)
             {
-                ParameterUtil.CheckAndCreateParameter(paramName + "Negative", _animatorController, AnimatorControllerParameterType.Float);
-                blendRootPara = paramName + "Negative";
+                ParameterUtil.CheckAndCreateParameter(prefix + paramName + "Negative", _animatorController, AnimatorControllerParameterType.Float);
+                blendRootPara = prefix + paramName + "Negative";
             }
 
             BlendTree decodeBinaryRoot = new BlendTree
@@ -317,7 +320,7 @@ namespace OSCTools.OSCmooth.Util
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
                 blendParameter = blendRootPara,
-                name = "Binary_" + paramName + "_Root",
+                name = "OSCm_Binary_" + paramName + "_Root",
                 useAutomaticThresholds = false
             };
 
@@ -328,7 +331,7 @@ namespace OSCTools.OSCmooth.Util
                 {
                     blendType = BlendTreeType.Direct,
                     hideFlags = HideFlags.HideInHierarchy,
-                    name = "Binary_" + paramName + "_Positive",
+                    name = "OSCm_Binary_" + paramName + "_Positive",
                     useAutomaticThresholds = false
                 };
 
@@ -387,14 +390,15 @@ namespace OSCTools.OSCmooth.Util
 
         public BlendTree CreateBinaryDecode(string paramName, string directory, int binaryPow, int binarySize, bool negative)
         {
+            string prefix = "OSCm/Binary/";
             int binaryPowValue = (int)Mathf.Pow(2, binaryPow);
-            ParameterUtil.CheckAndCreateParameter(paramName + binaryPowValue, _animatorController, AnimatorControllerParameterType.Float);
+            ParameterUtil.CheckAndCreateParameter(prefix + paramName + binaryPowValue, _animatorController, AnimatorControllerParameterType.Float);
 
             BlendTree decodeBinary = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = paramName + binaryPowValue,
+                blendParameter = prefix + paramName + binaryPowValue,
                 name = "Binary_" + paramName + "_Decode_" + binaryPowValue,
                 useAutomaticThresholds = false
             };

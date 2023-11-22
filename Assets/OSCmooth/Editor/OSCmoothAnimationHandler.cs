@@ -22,6 +22,7 @@ namespace OSCTools.OSCmooth.Animation
         public static void RemoveAllOSCmoothFromController()
         {
             AnimUtil _handler = new AnimUtil(_animatorController, _binaryExportDirectory, _animExportDirectory);
+            _handler.CleanAnimatorBlendTreeBloat("OSCm");
             _handler.RevertStateMachineParameters();
             _handler.RemoveExtendedParametersInController("OSCm");
             _handler.RemoveContainingLayersInController("OSCm");
@@ -156,7 +157,7 @@ namespace OSCTools.OSCmooth.Animation
             {
                 blendType = BlendTreeType.Direct,
                 hideFlags = HideFlags.HideInHierarchy,
-                name = "Binary_Root",
+                name = "OSCm_Binary_Root",
                 useAutomaticThresholds = false
             };
 
@@ -175,7 +176,7 @@ namespace OSCTools.OSCmooth.Animation
             foreach (OSCmoothParameter p in _parameters)
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Binary Parameter Direct BlendTree", (float)i++/_parameters.Count);
-                if (p.binarySizeSelection == 0) return;
+                if (p.binarySizeSelection == 0) continue;
                 var decodeBinary = _handler.CreateBinaryBlendTree(p.paramName, p.binarySizeSelection, p.combinedParameter);
 
                 childBinary.Add(new ChildMotion

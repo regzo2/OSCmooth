@@ -237,12 +237,9 @@ namespace OSCTools.OSCmooth.Util
             var curvesInit = new AnimationCurve(new Keyframe(0.0f, initThreshold));
             var curvesFinal = new AnimationCurve(new Keyframe(0.0f, finalThreshold));
 
-            var _animationClipInit = FindOrCreateAnimationClip(initAssetPath, paramName, curvesInit);
-            var _animationClipFinal = FindOrCreateAnimationClip(finalAssetPath, paramName, curvesFinal);
+            var _animationClipInit = FindOrCreateAnimationClip(initAssetPath, proxyPrefix + paramName, curvesInit);
+            var _animationClipFinal = FindOrCreateAnimationClip(finalAssetPath, proxyPrefix + paramName, curvesFinal);
 
-            _animationClipInit.SetCurve("", typeof(Animator), proxyPrefix + paramName, curvesInit);
-            _animationClipFinal.SetCurve("", typeof(Animator), proxyPrefix + paramName, curvesFinal);
-            
             return new AnimationClip[] { _animationClipInit, _animationClipFinal };
         }
 

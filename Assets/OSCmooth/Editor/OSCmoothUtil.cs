@@ -47,6 +47,7 @@ namespace OSCTools.OSCmooth.Util
 
         public void CleanAnimatorBlendTreeBloat(string filter)
         {
+            _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath);
             foreach (Object asset in _animatorAssets)
             {
                 if (asset?.GetType() == typeof(BlendTree) && asset != null)
@@ -61,6 +62,7 @@ namespace OSCTools.OSCmooth.Util
 
         public void RenameAllStateMachineInstancesOfBlendParameter(string initParameter, string newParameter)
         {
+            _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath);
             foreach (Object asset in _animatorAssets)
             {
                 switch (asset)
@@ -99,6 +101,7 @@ namespace OSCTools.OSCmooth.Util
         
         public List<string> GetAllStateMachineParameters()
         {
+            _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath);
             List<string> stateParams = new List<string>();
 
             foreach (Object asset in _animatorAssets)

@@ -283,8 +283,8 @@ namespace OSCTools.OSCmooth.Util
             // Create smoothing anims
             AnimationClip[] driverAnims = CreateFloatSmootherAnimation(paramName, smoothSuffix, proxyPrefix, _smoothPath);
 
-            rootTree.AddChild(falseTree, 1f);
-            rootTree.AddChild(trueTree, 0f);
+            rootTree.AddChild(falseTree, 0f);
+            rootTree.AddChild(trueTree, 1f);
 
             falseTree.AddChild(driverAnims[0], -1f);
             falseTree.AddChild(driverAnims[1], 1f);
@@ -331,7 +331,7 @@ namespace OSCTools.OSCmooth.Util
                 {
                     blendType = BlendTreeType.Direct,
                     hideFlags = HideFlags.HideInHierarchy,
-                    name = "OSCm_Binary_" + paramName + "_Positive",
+                    name = "OSCm_Binary_ + " + paramName + "_" + (sign < 0 ? "Negative" : "Positive") + "_" +_animatorGUID,
                     useAutomaticThresholds = false
                 };
 
@@ -339,7 +339,7 @@ namespace OSCTools.OSCmooth.Util
 
                 for (int i = 0; i < binarySizeSelection; i++)
                 {
-                    var decodeBinaryPositive = CreateBinaryDecode(paramName, _binaryPath, i, binarySizeSelection, sign >= 0);
+                    var decodeBinaryPositive = CreateBinaryDecode(paramName, _binaryPath, i, binarySizeSelection, sign <= 0);
 
                     childBinaryDecode.Add(new ChildMotion
                     {
@@ -348,8 +348,9 @@ namespace OSCTools.OSCmooth.Util
                         timeScale = 1
                     });
                 }
+
                 decodeBinaryChildTree.children = childBinaryDecode.ToArray();
-                decodeBinaryRoot.AddChild(decodeBinaryChildTree, combinedParameter ? 1f : 0f);
+                decodeBinaryRoot.AddChild(decodeBinaryChildTree, sign >= 0 ? 0f : 1f);
                 AssetDatabase.AddObjectToAsset(decodeBinaryChildTree, _animatorPath);
             }
 
@@ -391,26 +392,27 @@ namespace OSCTools.OSCmooth.Util
         public BlendTree CreateBinaryDecode(string paramName, string directory, int binaryPow, int binarySize, bool negative)
         {
             string prefix = "OSCm/Binary/";
-            int binaryPowValue = (int)Mathf.Pow(2, binaryPow);
+            float binaryPowValue = Mathf.Pow(2, binaryPow);
             ParameterUtil.CheckAndCreateParameter(prefix + paramName + binaryPowValue, _animatorController, AnimatorControllerParameterType.Float);
 
             BlendTree decodeBinary = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = prefix + paramName + binaryPowValue,
+                blendParameter = prefix + paramName + (int)binaryPowValue,
                 name = "Binary_" + paramName + "_Decode_" + binaryPowValue,
                 useAutomaticThresholds = false
             };
 
             // Create Decode anims and weight per binary
-            AnimationClip[] decodeAnims = CreateBinaryAnimation(paramName, directory, (negative ? -0.5f : 0.5f) * binaryPowValue / ((int)Mathf.Pow(2, binarySize) - 1f), binaryPow);
+            AnimationClip[] decodeAnims = CreateBinaryAnimation(paramName, directory, (negative ? -1f : 1f) * binaryPowValue / (Mathf.Pow(2, binarySize) - 1f), binaryPow);
             decodeBinary.AddChild(decodeAnims[0], 0f);
             decodeBinary.AddChild(decodeAnims[1], 1f);
 
             AssetDatabase.AddObjectToAsset(decodeBinary, _animatorPath);
 
             return decodeBinary;
+
         }
     }
 }

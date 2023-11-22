@@ -157,7 +157,6 @@ namespace OSCTools.OSCmooth
                                 paramName = parameter.name,
                                 localSmoothness = _basisConfigurationParameter.localSmoothness,
                                 remoteSmoothness = _basisConfigurationParameter.remoteSmoothness,
-                                flipInputOutput = _basisConfigurationParameter.flipInputOutput,
                                 convertToProxy = _basisConfigurationParameter.convertToProxy,
                                 binarySizeSelection = _basisConfigurationParameter.binarySizeSelection,
                                 combinedParameter = _basisConfigurationParameter.combinedParameter
@@ -255,7 +254,6 @@ namespace OSCTools.OSCmooth
                         paramName = _basisConfigurationParameter.paramName,
                         localSmoothness = _basisConfigurationParameter.localSmoothness,
                         remoteSmoothness = _basisConfigurationParameter.remoteSmoothness,
-                        flipInputOutput = _basisConfigurationParameter.flipInputOutput,
                         convertToProxy = _basisConfigurationParameter.convertToProxy,
                         binarySizeSelection = _basisConfigurationParameter.binarySizeSelection,
                         combinedParameter = _basisConfigurationParameter.combinedParameter
@@ -292,10 +290,10 @@ namespace OSCTools.OSCmooth
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Apply OSCmooth to Layer");
 
-                    OSCmoothAnimationHandler.RemoveAllBinaryFromController();
+
+
                     OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
-                    OSCmoothAnimationHandler.CreateBinaryLayer();
-                    OSCmoothAnimationHandler.CreateSmoothAnimationLayer();
+                    OSCmoothAnimationHandler.CreateLayers();
                 }
 
                 EditorGUILayout.Space(20);
@@ -319,7 +317,6 @@ namespace OSCTools.OSCmooth
                     OSCmoothAnimationHandler._parameters = _parameterAsset.parameters;
 
                     Undo.RecordObject(OSCmoothAnimationHandler._animatorController, "Revert OSCmooth in Layer");
-                    OSCmoothAnimationHandler.RemoveAllBinaryFromController();
                     OSCmoothAnimationHandler.RemoveAllOSCmoothFromController();
 
                     FileUtil.DeleteFileOrDirectory("Assets/OSCmooth/Generated/Smooth/" + "Animator_" + animatorGUID);
@@ -354,7 +351,6 @@ namespace OSCTools.OSCmooth
             float localSmoothness = parameter.localSmoothness;
             float remoteSmoothness = parameter.remoteSmoothness;
             bool convertToProxy = parameter.convertToProxy;
-            bool flipIO = parameter.flipInputOutput;
             int binarySizeSelection = parameter.binarySizeSelection;
             bool combinedParameter = parameter.combinedParameter;
 
@@ -392,18 +388,6 @@ namespace OSCTools.OSCmooth
                     convertToProxy
                 );
 
-                flipIO = EditorGUILayout.Toggle
-                (
-                    new GUIContent
-                    (
-                        "Flip Input/Output",
-                        "Sets the Base parameter to be the output parameter from the smoother layer, and " +
-                        "sets the Proxy parameter as the input driver parameter. Useful for apps that can " +
-                        "drive the Proxy parameter like VRCFaceTracking binary parameters."
-                    ),
-                    flipIO
-                );
-
                 binarySizeSelection = EditorGUILayout.Popup
                 (
                     new GUIContent
@@ -439,7 +423,6 @@ namespace OSCTools.OSCmooth
                 parameter.localSmoothness = localSmoothness;
                 parameter.remoteSmoothness = remoteSmoothness;
                 parameter.convertToProxy = convertToProxy;
-                parameter.flipInputOutput = flipIO;
                 parameter.binarySizeSelection = binarySizeSelection;
                 parameter.combinedParameter = combinedParameter;
             }

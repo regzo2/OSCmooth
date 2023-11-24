@@ -46,14 +46,6 @@ namespace Tools.OSCmooth
 
         public override void OnInspectorGUI()
         {
-            if (GUILayout.Button(
-                new GUIContent(
-                    "Use Playable Layer Parameters",
-                    "Populates the parameter list with existing float parameters in all available."
-                )))
-            {
-                new OSCmoothPreprocessor().OnBuildRequested(VRCSDKRequestedBuildType.Avatar);
-            }
             DrawAnimationLayerSelection(_behavior.avatarDescriptor);
             DrawConfigurationSection(_behavior);
             DrawGlobalConfigurationSection(_behavior.setup);

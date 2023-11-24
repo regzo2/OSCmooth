@@ -29,12 +29,8 @@ namespace Tools.OSCmooth
         public void OnPostprocessAvatar()
         {
             var _oscmBehaviors = Object.FindObjectsOfType<OSCmoothBehavior>();
-
             foreach (var oscm in _oscmBehaviors)
-            {
-                EditorUtility.DisplayDialog("OSCmooth", $"is av null? {oscm.avatarDescriptor == null}", "ok");
                 oscm.avatarDescriptor.baseAnimationLayers = oscm.prevLayers;
-            }
         }
     }
 
@@ -49,25 +45,16 @@ namespace Tools.OSCmooth
 
             foreach (var oscm in _oscmBehaviors)
             {
-                var _avatarDescriptor = oscm.avatarDescriptor;
-                EditorUtility.DisplayDialog("OSCmooth", $"is av null? {_avatarDescriptor == null}", "ok");
-                if (_avatarDescriptor == null)
-                {
-                    return false;
-                }
-
-                EditorUtility.DisplayDialog("OSCmooth", $"is oscm null? {oscm == null}", "ok");
                 if (oscm == null)
-                {
                     return false;
-                }
+
+                var _avatarDescriptor = oscm.avatarDescriptor;
+                if (_avatarDescriptor == null)
+                    return false;
 
                 oscm.prevLayers = _avatarDescriptor.baseAnimationLayers;
-                EditorUtility.DisplayDialog("OSCmooth", $"is layers null? {oscm.prevLayers == null}", "ok");
                 if (oscm.prevLayers == null)
-                {
                     return false;
-                }
 
                 var _newLayers = new CustomAnimLayer[_avatarDescriptor.baseAnimationLayers.Length];
                 for (int i = 0; i < _avatarDescriptor.baseAnimationLayers.Length; i++)

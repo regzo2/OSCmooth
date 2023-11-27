@@ -9,6 +9,7 @@ namespace Tools.OSCmooth.Types
     public class OSCmoothLayers : ScriptableObject
     {
         public List<OSCmoothLayer> layers = new List<OSCmoothLayer>();
+        public OSCmoothParameter configParam = new OSCmoothParameter();
     }
 
     [Serializable]

@@ -13,7 +13,6 @@ namespace Tools.OSCmooth
     public class OSCmoothBehaviorEditor : Editor
     {
         private OSCmoothBehavior _behavior;
-        private OSCmoothParameter _configParam;
 
         private bool[] _layerVisible = new bool[10];
         private bool _showGlobalConfiguration = false;
@@ -32,16 +31,25 @@ namespace Tools.OSCmooth
         };
 
         [InitializeOnLoadMethod]
-        void OnEnable()
+        void OnLoad()
         {
             _behavior = (OSCmoothBehavior)target;
-            _behavior.setup = CreateInstance<OSCmoothLayers>();
-            _behavior.avatarDescriptor = _behavior.GetComponent<VRCAvatarDescriptor>();
 
-            _behavior.setup.layers = _behavior.avatarDescriptor.baseAnimationLayers
-                .Select(layer => new OSCmoothLayer(layer))
-                .ToList();
+            if (_behavior == null)
+                return;
 
+            if (_behavior.setup == null)
+                _behavior.setup = CreateInstance<OSCmoothLayers>();
+
+            if (_behavior.avatarDescriptor == null)
+                _behavior.avatarDescriptor = _behavior.GetComponent<VRCAvatarDescriptor>();
+
+            if (_behavior.setup.layers == null || _behavior.setup.layers.Count != _behavior.avatarDescriptor.baseAnimationLayers.Length)
+            {
+                _behavior.setup.layers = _behavior.avatarDescriptor.baseAnimationLayers
+                    .Select(layer => new OSCmoothLayer(layer))
+                    .ToList();
+            }
         }
 
         public override void OnInspectorGUI()
@@ -106,6 +114,7 @@ namespace Tools.OSCmooth
                         {
                             if (_behavior.setup.layers[i].parameters == null)
                                 _behavior.setup.layers[i].parameters = new List<OSCmoothParameter>();
+                            var _configParam = _behavior.setup.configParam;
                             _behavior.setup.layers[i].parameters.Add(new OSCmoothParameter
                             {
                                 paramName = parameter.name,
@@ -136,7 +145,7 @@ namespace Tools.OSCmooth
             _showGlobalConfiguration = EditorGUILayout.Foldout(_showGlobalConfiguration, "Default Parameter Values");
             if (_showGlobalConfiguration)
             {
-                DrawParameterConfiguration(_configParam, false);
+                DrawParameterConfiguration(_behavior.setup.configParam, false);
             }
         }
 
@@ -216,6 +225,7 @@ namespace Tools.OSCmooth
             {
                 if (parameters == null)
                     parameters = new List<OSCmoothParameter>();
+                var _configParam = _behavior.setup.configParam;
                 OSCmoothParameter param = new OSCmoothParameter
                 {
                     paramName = _configParam.paramName,

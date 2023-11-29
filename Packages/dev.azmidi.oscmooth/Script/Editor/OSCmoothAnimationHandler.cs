@@ -2,16 +2,14 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Jobs;
-using Tools.OSCmooth.Types;
+using OSCmooth.Types;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-
-#if UNITY_EDITOR
-using Tools.OSCmooth.Util;
+using OSCmooth.Util;
 using UnityEditor.Animations;
 
-namespace Tools.OSCmooth.Animation
+namespace OSCmooth.Animation
 {
     public class OSCmoothAnimationHandler
     {
@@ -193,4 +191,3 @@ namespace Tools.OSCmooth.Animation
         }
     }
 }
-#endif

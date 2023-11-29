@@ -1,16 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Tools.OSCmooth.Types;
+using OSCmooth.Types;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase.Editor.BuildPipeline;
 
-namespace Tools.OSCmooth
+namespace OSCmooth.Editor
 {
     [CustomEditor(typeof(OSCmoothBehavior))]
-    public class OSCmoothBehaviorEditor : Editor
+    public class OSCmoothBehaviorEditor : UnityEditor.Editor
     {
         private OSCmoothBehavior _behavior;
 
@@ -30,8 +30,7 @@ namespace Tools.OSCmooth
             "128 (7 Bit)"
         };
 
-        [InitializeOnLoadMethod]
-        void OnLoad()
+        void OnEnable ()
         {
             _behavior = (OSCmoothBehavior)target;
 

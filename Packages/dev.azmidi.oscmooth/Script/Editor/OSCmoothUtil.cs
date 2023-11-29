@@ -1,14 +1,12 @@
-﻿using Tools.OSCmooth.Types;
+﻿using OSCmooth.Types;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-
-#if UNITY_EDITOR
 using UnityEditor.Animations;
 
-namespace Tools.OSCmooth.Util
+namespace OSCmooth.Util
 {
     public class AnimUtil
     {
@@ -410,4 +408,3 @@ namespace Tools.OSCmooth.Util
         }
     }
 }
-#endif

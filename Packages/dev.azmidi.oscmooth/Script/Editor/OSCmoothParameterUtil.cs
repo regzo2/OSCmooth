@@ -7,12 +7,9 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using Debug = UnityEngine.Debug;
-
-
-#if UNITY_EDITOR
 using UnityEditor.Animations;
 
-namespace Tools.OSCmooth.Util
+namespace OSCmooth.Util
 {
     public class ParameterUtil
     {
@@ -201,4 +198,3 @@ namespace Tools.OSCmooth.Util
         }
     }
 }
-#endif

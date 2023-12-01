@@ -9,6 +9,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase.Editor.BuildPipeline;
+using OSCmooth.Editor.Animation;
 
 [CustomEditor(typeof(OSCmoothBehavior))]
 public class OSCmoothBehaviorEditor : Editor
@@ -80,7 +81,18 @@ public class OSCmoothBehaviorEditor : Editor
                                "Use this if you want to non-destructively add OSCmooth using this Behavior script."),
                 Array.Empty<GUILayoutOption>()))
             {
-                _avatarDescriptor.RemoveOSCmParameters(_setup.parameters);
+                foreach (var layer in _avatarDescriptor.baseAnimationLayers)
+                {
+                    var _animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GetAssetPath(layer.animatorController));
+                    if (_animatorController == null) continue;
+                    new OSCmoothAnimationHandler
+                    (
+                        _setup.parameters,
+                        _animatorController,
+                        "",
+                        "")
+                    .RemoveAllOSCmoothFromController();
+                }
                 AssetDatabase.SaveAssets();
             }
             if (GUILayout.Button(

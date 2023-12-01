@@ -1,199 +1,128 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
-using Debug = UnityEngine.Debug;
 using UnityEditor.Animations;
+using OSCmooth.Types;
 
 namespace OSCmooth.Util
 {
-    public class ParameterUtil
+    public static class ParameterExtensions
     {
-        public static bool AddVRCParameter(VRCAvatarDescriptor avatarDescriptor, List<VRCExpressionParameters.Parameter> parameters)
+        public static bool AppendToExpressionParameters(this List<OSCmoothParameter> oscmParameters, VRCAvatarDescriptor avatarDescriptor)
         {
-            // Metric to gauge additional Expression Parameter's storage cost
-            int paramTotalCost = 0;
-            int maxCost = VRCExpressionParameters.MAX_PARAMETER_COST;
-
-            paramTotalCost += avatarDescriptor.expressionParameters.CalcTotalCost();
-
-            // Make sure Parameters aren't null
-            if (avatarDescriptor.expressionParameters == null)
+            int _oscmCost = ParameterCost(oscmParameters);
+            int _descCost = CalcAvailableSpace(avatarDescriptor.expressionParameters);
+            EditorUtility.DisplayDialog("OSCmooth", $"({_oscmCost} used / {_descCost} available).", "OK");
+            if (_oscmCost > _descCost)
             {
-                Debug.Log("ExpressionsParameters not found!");
+                EditorUtility.DisplayDialog("OSCmooth", $"OSCmooth parameters take up too much Expression Parameter space on your avatar ({_oscmCost} used / {_descCost} available). Reduce the parameter usage of OSCmooth to upload.", "OK");
                 return false;
             }
 
-            // Checks to see if parameter already exists; calculate new total parameter cost
-            foreach (VRCExpressionParameters.Parameter param in parameters)
-                if (avatarDescriptor.expressionParameters.FindParameter(param.name) == null)
-                    paramTotalCost += (param.valueType == VRCExpressionParameters.ValueType.Bool ? 1 : 8);
+            List<string> _floatParameters = new List<string>();
+            List<string> _binaryParameters = new List<string>();
 
-            // exit if expected total parameter cost exceeds max of the parameters'`4 bits
-            if (paramTotalCost > maxCost)
+            foreach (OSCmoothParameter parameter in oscmParameters)
             {
-                Debug.Log("Additional Expression Parameters exceed maximum storage. : " + paramTotalCost);
-                return false;
-            }
-
-            // Instantiate and Save to Database
-            VRCExpressionParameters newParameters = avatarDescriptor.expressionParameters;
-            string assetPath = AssetDatabase.GetAssetPath(avatarDescriptor.expressionParameters);
-            if (assetPath != String.Empty)
-            {
-                AssetDatabase.RemoveObjectFromAsset(avatarDescriptor.expressionParameters);
-                AssetDatabase.CreateAsset(newParameters, assetPath);
-                avatarDescriptor.expressionParameters = newParameters;
-            }
-
-            foreach (VRCExpressionParameters.Parameter parameter in parameters)
-            {
-                // Make sure the parameter doesn't already exist
-                VRCExpressionParameters.Parameter foundParameter = newParameters.FindParameter(parameter.name);
-                if (foundParameter == null || foundParameter.valueType != parameter.valueType)
+                if (parameter.binarySizeSelection != 0 && (!parameter.binaryNegative || parameter.binarySizeSelection < 7))
                 {
-                    // Add the parameter
-                    List<VRCExpressionParameters.Parameter> betterParametersBecauseItsAListInstead =
-                        newParameters.parameters.ToList();
-                    betterParametersBecauseItsAListInstead.Add(parameter);
-                    newParameters.parameters = betterParametersBecauseItsAListInstead.ToArray();
+                    for (int binarySize = 0; binarySize < parameter.binarySizeSelection; binarySize++)
+                    {
+                        _binaryParameters.Add($"{parameter.paramName}{1 << binarySize}");
+                    }
+                    if (parameter.binaryNegative)
+                    {
+                        _binaryParameters.Add(parameter.paramName + "Negative");
+                    }
+                }
+                else
+                {
+                    _floatParameters.Add(parameter.paramName);
                 }
             }
+            List<VRCExpressionParameters.Parameter> _vrcParameters = avatarDescriptor.expressionParameters.parameters.ToList();
+            foreach (string floatName in _floatParameters)
+            {
+                _vrcParameters.Add(new VRCExpressionParameters.Parameter
+                {
+                    name = floatName,
+                    valueType = VRCExpressionParameters.ValueType.Float,
+                    defaultValue = 0f,
+                    saved = false,
+                    networkSynced = true
+                });
+            }
+            foreach (string boolName in _binaryParameters)
+            {
+                _vrcParameters.Add(new VRCExpressionParameters.Parameter
+                {
+                    name = boolName,
+                    valueType = VRCExpressionParameters.ValueType.Bool,
+                    defaultValue = 0f,
+                    saved = false,
+                    networkSynced = true
+                });
+            }
+            avatarDescriptor.expressionParameters.parameters = _vrcParameters.ToArray();
             return true;
         }
 
-        public static bool RemoveVRCParameter(VRCAvatarDescriptor avatarDescriptor, List<VRCExpressionParameters.Parameter> parameters)
+        public static int ParameterCost(this List<OSCmoothParameter> oscmParameters)
         {
-            // Make sure Parameters aren't null
-            if (avatarDescriptor.expressionParameters == null)
+            int _oscmUsage = 0;
+            oscmParameters.ForEach(delegate (OSCmoothParameter p)
             {
-                Debug.Log("ExpressionsParameters not found!");
-                return false;
-            }
+                _oscmUsage += ((p.binarySizeSelection > 0) ? p.binarySizeSelection : 8);
+            });
+            return _oscmUsage;
+        }
 
-            // Instantiate and Save to Database
-            VRCExpressionParameters newParameters = avatarDescriptor.expressionParameters;
-            string assetPath = AssetDatabase.GetAssetPath(avatarDescriptor.expressionParameters);
-            if (assetPath != String.Empty)
+        public static void RemoveOSCmParameters(this VRCAvatarDescriptor avatarDescriptor, List<OSCmoothParameter> oscmParameters)
+        {
+            List<VRCExpressionParameters.Parameter> vrcParameters = avatarDescriptor.expressionParameters.parameters.ToList();
+            List<VRCExpressionParameters.Parameter> toRemove = new List<VRCExpressionParameters.Parameter>();
+            foreach (OSCmoothParameter oscmParameter in oscmParameters)
             {
-                AssetDatabase.RemoveObjectFromAsset(avatarDescriptor.expressionParameters);
-                AssetDatabase.CreateAsset(newParameters, assetPath);
-                avatarDescriptor.expressionParameters = newParameters;
-            }
-
-
-            foreach (VRCExpressionParameters.Parameter parameter in parameters)
-            {
-                // Check and see if parameter exists
-                VRCExpressionParameters.Parameter foundParameter = newParameters.FindParameter(parameter.name);
-                if (foundParameter == null || foundParameter.valueType != parameter.valueType)
+                foreach (VRCExpressionParameters.Parameter vrcParameter in vrcParameters)
                 {
-                    // Remove the parameter
-                    List<VRCExpressionParameters.Parameter> betterParametersBecauseItsAListInstead =
-                        newParameters.parameters.ToList();
-                    betterParametersBecauseItsAListInstead.Remove(foundParameter);
-                    newParameters.parameters = betterParametersBecauseItsAListInstead.ToArray();
+                    if (vrcParameter.name.Contains(oscmParameter.paramName))
+                    {
+                        toRemove.Add(vrcParameter);
+                    }
                 }
             }
-            return true;
+            avatarDescriptor.expressionParameters.parameters = vrcParameters.Except(toRemove).ToArray();
         }
 
-        public static bool RemoveVRCParameter(VRCAvatarDescriptor avatarDescriptor, VRCExpressionParameters.Parameter parameter)
+        public static int CalcAvailableSpace(this VRCExpressionParameters parameters)
         {
-            // Make sure Parameters aren't null
-            if (avatarDescriptor.expressionParameters == null)
+            return (int)Mathf.Max(new float[2]
             {
-                Debug.Log("ExpressionsParameters not found!");
-                return false;
-            }
-
-            // Instantiate and Save to Database
-            VRCExpressionParameters newParameters = avatarDescriptor.expressionParameters;
-            string assetPath = AssetDatabase.GetAssetPath(avatarDescriptor.expressionParameters);
-            if (assetPath != String.Empty)
-            {
-                AssetDatabase.RemoveObjectFromAsset(avatarDescriptor.expressionParameters);
-                AssetDatabase.CreateAsset(newParameters, assetPath);
-                avatarDescriptor.expressionParameters = newParameters;
-            }
-
-            // Check and see if parameter exists
-            VRCExpressionParameters.Parameter foundParameter = newParameters.FindParameter(parameter.name);
-            if (newParameters.FindParameter(parameter.name) != null)
-            {
-                // Remove the parameter
-                List<VRCExpressionParameters.Parameter> betterParametersBecauseItsAListInstead =
-                    newParameters.parameters.ToList();
-                betterParametersBecauseItsAListInstead.Remove(newParameters.FindParameter(parameter.name));
-                newParameters.parameters = betterParametersBecauseItsAListInstead.ToArray();
-            }
-            return true;
+            0f,
+            256 - parameters.CalcTotalCost()
+            });
         }
 
-        public static bool RemoveVRCParameter(VRCAvatarDescriptor avatarDescriptor, string parameter)
+        public static AnimatorControllerParameter CheckAndCreateParameter(this AnimatorController animatorController, string paramName, AnimatorControllerParameterType type, float defaultVal = 0f)
         {
-            // Make sure Parameters aren't null
-            if (avatarDescriptor.expressionParameters == null)
-            {
-                Debug.Log("ExpressionsParameters not found!");
-                return false;
-            }
-
-            // Instantiate and Save to Database
-            VRCExpressionParameters newParameters = avatarDescriptor.expressionParameters;
-            string assetPath = AssetDatabase.GetAssetPath(avatarDescriptor.expressionParameters);
-            if (assetPath != String.Empty)
-            {
-                AssetDatabase.RemoveObjectFromAsset(avatarDescriptor.expressionParameters);
-                AssetDatabase.CreateAsset(newParameters, assetPath);
-                avatarDescriptor.expressionParameters = newParameters;
-            }
-
-            // Check and see if parameter exists
-            if (newParameters.FindParameter(parameter) != null)
-            {
-                // Remove the parameters with listed keyword
-                List<VRCExpressionParameters.Parameter> betterParametersBecauseItsAListInstead =
-                    newParameters.parameters.ToList();
-                foreach (VRCExpressionParameters.Parameter p in betterParametersBecauseItsAListInstead)
-                    if (p.name.Contains(parameter))
-                        betterParametersBecauseItsAListInstead.Remove(p);
-                newParameters.parameters = betterParametersBecauseItsAListInstead.ToArray();
-            }
-            return true;
-        }
-        public static AnimatorControllerParameter CheckAndCreateParameter(string paramName, AnimatorController animatorController, AnimatorControllerParameterType type, double defaultVal = 0)
-        {
-            HashSet<string> existingParameterNames = new HashSet<string>(
-                animatorController.parameters.Select(p => p.name)
-            );
-
-            AnimatorControllerParameter parameter = null;
-
-            // Check if the parameter already exists
+            HashSet<string> existingParameterNames = new HashSet<string>(animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
             if (existingParameterNames.Contains(paramName))
             {
-                parameter = animatorController.parameters.First(p => p.name == paramName);
+                return animatorController.parameters.First((AnimatorControllerParameter p) => p.name == paramName);
             }
-            else
+            AnimatorControllerParameter parameter = new AnimatorControllerParameter
             {
-                // Create and add the parameter
-                parameter = new AnimatorControllerParameter
-                {
-                    name = paramName,
-                    type = type,
-                    defaultFloat = (float)defaultVal,
-                    defaultInt = (int)defaultVal,
-                    defaultBool = Convert.ToBoolean(defaultVal)
-                };
-
-                animatorController.AddParameter(parameter);
-            }
-
+                name = paramName,
+                type = type,
+                defaultFloat = defaultVal,
+                defaultInt = (int)defaultVal,
+                defaultBool = Convert.ToBoolean(defaultVal)
+            };
+            animatorController.AddParameter(parameter);
             return parameter;
         }
     }

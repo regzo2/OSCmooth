@@ -243,9 +243,9 @@ namespace OSCmooth.Util
             var proxyPrefix = "OSCm/Proxy/";
             var smoothSuffix = "Smoother";
 
-            ParameterUtil.CheckAndCreateParameter(prefix + paramName + smoothSuffix, _animatorController, AnimatorControllerParameterType.Float, smoothness);
-            ParameterUtil.CheckAndCreateParameter(proxyPrefix + paramName, _animatorController, AnimatorControllerParameterType.Float);
-            ParameterUtil.CheckAndCreateParameter(paramName, _animatorController, AnimatorControllerParameterType.Float);
+            _animatorController.CheckAndCreateParameter(prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, smoothness);
+            _animatorController.CheckAndCreateParameter(proxyPrefix + paramName, AnimatorControllerParameterType.Float);
+            _animatorController.CheckAndCreateParameter(paramName, AnimatorControllerParameterType.Float);
 
             // Creating 3 blend trees to create the feedback loop
             BlendTree rootTree = new BlendTree
@@ -304,7 +304,7 @@ namespace OSCmooth.Util
             var blendRootPara = "OSCm/BlendSet";
             if (combinedParameter)
             {
-                ParameterUtil.CheckAndCreateParameter(prefix + paramName + "Negative", _animatorController, AnimatorControllerParameterType.Float);
+                _animatorController.CheckAndCreateParameter(prefix + paramName + "Negative", AnimatorControllerParameterType.Float);
                 blendRootPara = prefix + paramName + "Negative";
             }
 
@@ -386,7 +386,7 @@ namespace OSCmooth.Util
         {
             string prefix = "OSCm/Binary/";
             float binaryPowValue = Mathf.Pow(2, binaryPow);
-            ParameterUtil.CheckAndCreateParameter(prefix + paramName + binaryPowValue, _animatorController, AnimatorControllerParameterType.Float);
+            _animatorController.CheckAndCreateParameter(prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float);
 
             BlendTree decodeBinary = new BlendTree
             {

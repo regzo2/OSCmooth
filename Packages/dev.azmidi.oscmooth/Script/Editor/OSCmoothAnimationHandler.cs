@@ -6,7 +6,7 @@ using OSCmooth.Types;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using OSCmooth.Editor.Util;
+using OSCmooth.Util;
 using UnityEditor.Animations;
 using System.IO;
 

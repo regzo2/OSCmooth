@@ -11,6 +11,7 @@ namespace OSCmooth
     {
         [HideInInspector] public OSCmoothSetup setup;
         [HideInInspector] public CustomAnimLayer[] prevLayers;
-        [HideInInspector] public VRCExpressionParameters.Parameter[] prevParameters;
+        [HideInInspector] public string prevParameterPath;
+        [HideInInspector] public bool hasPreprocessed = false;
     }
 }

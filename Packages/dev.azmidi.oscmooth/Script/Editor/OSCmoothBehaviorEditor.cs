@@ -110,7 +110,7 @@ public class OSCmoothBehaviorEditor : Editor
                                "OSCmooth can manage them (such as creating binary parameters)."), 
                 Array.Empty<GUILayoutOption>()))
             {
-                _setup.parameters.AppendToExpressionParameters(_avatarDescriptor);
+                _setup.parameters.CreateExpressionParameters(_avatarDescriptor, $"Assets/OSCmooth/Temp/{((OSCmoothBehavior)target).gameObject.name}/");
                 AssetDatabase.SaveAssets();
             }
             if (GUILayout.Button(
@@ -118,7 +118,7 @@ public class OSCmoothBehaviorEditor : Editor
                                "Creates OSCmooth layers manually. Creates new Animator Controllers and sets up the avatar to use them."), 
                 Array.Empty<GUILayoutOption>()))
             {
-                new OSCmoothPreprocessor().OnBuildRequested((VRCSDKRequestedBuildType)0);
+                new OSCmoothPreprocessor().OnPreprocessAvatar(((OSCmoothBehavior)target).gameObject);
                 AssetDatabase.SaveAssets();
             }
             if (GUILayout.Button(

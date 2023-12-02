@@ -12,7 +12,7 @@ namespace OSCmooth.Util
 {
     public static class ParameterExtensions
     {
-        public static bool AppendToExpressionParameters(this List<OSCmoothParameter> oscmParameters, VRCAvatarDescriptor avatarDescriptor)
+        public static bool CreateExpressionParameters(this List<OSCmoothParameter> oscmParameters, VRCAvatarDescriptor avatarDescriptor, string directory)
         {
             int _oscmCost = ParameterCost(oscmParameters);
             int _descCost = CalcAvailableSpace(avatarDescriptor.expressionParameters);
@@ -67,7 +67,16 @@ namespace OSCmooth.Util
                     networkSynced = true
                 });
             }
-            avatarDescriptor.expressionParameters.parameters = _vrcParameters.ToArray();
+
+            var _expressionsPath = AssetDatabase.GetAssetPath(avatarDescriptor.expressionParameters);
+            var _proxyPath = $"{directory}{avatarDescriptor.expressionParameters.name}Proxy.asset"; 
+            AssetDatabase.CopyAsset(_expressionsPath, _proxyPath);
+            AssetDatabase.SaveAssets();
+            var _proxyExpressions = AssetDatabase.LoadAssetAtPath<VRCExpressionParameters>(_proxyPath);
+            _proxyExpressions.parameters = _vrcParameters.ToArray();
+
+            avatarDescriptor.expressionParameters = _proxyExpressions;
+            AssetDatabase.SaveAssets();
             return true;
         }
 
@@ -76,7 +85,7 @@ namespace OSCmooth.Util
             int _oscmUsage = 0;
             oscmParameters.ForEach(delegate (OSCmoothParameter p)
             {
-                _oscmUsage += ((p.binarySizeSelection > 0) ? p.binarySizeSelection : 8);
+                _oscmUsage += (p.binarySizeSelection > 0) ? p.binarySizeSelection : VRCExpressionParameters.TypeCost(VRCExpressionParameters.ValueType.Float);
             });
             return _oscmUsage;
         }

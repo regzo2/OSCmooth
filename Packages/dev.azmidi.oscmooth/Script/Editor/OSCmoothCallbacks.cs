@@ -41,7 +41,7 @@ namespace OSCmooth.Editor
 
 	public class OSCmoothPreprocessor : IVRCSDKPreprocessAvatarCallback
 	{
-		public int callbackOrder => 0;
+		public int callbackOrder => -1024;
 
 		public bool OnPreprocessAvatar(GameObject avatar)
 		{

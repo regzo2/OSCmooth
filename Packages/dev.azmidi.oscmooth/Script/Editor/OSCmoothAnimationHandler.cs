@@ -243,12 +243,13 @@ namespace OSCmooth.Editor.Animation
                         if (blendTree.blendParameterY == initParameter)
                             blendTree.blendParameterY = newParameter;
 
+                        var _children = blendTree.children;
                         for (int i = 0; i < blendTree.children.Length; i++)
                         {
-                            var child = blendTree.children[i];
-                            if (child.directBlendParameter == initParameter)
-                                child.directBlendParameter = newParameter;
+                            if (_children[i].directBlendParameter == initParameter)
+                                _children[i].directBlendParameter = newParameter;
                         }
+                        blendTree.children = _children;
                         break;
 
                     case AnimatorState animatorState:

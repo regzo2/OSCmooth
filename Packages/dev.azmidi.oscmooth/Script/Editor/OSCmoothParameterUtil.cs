@@ -16,7 +16,6 @@ namespace OSCmooth.Util
         {
             int _oscmCost = ParameterCost(oscmParameters);
             int _descCost = CalcAvailableSpace(avatarDescriptor.expressionParameters);
-            EditorUtility.DisplayDialog("OSCmooth", $"({_oscmCost} used / {_descCost} available).", "OK");
             if (_oscmCost > _descCost)
             {
                 EditorUtility.DisplayDialog("OSCmooth", $"OSCmooth parameters take up too much Expression Parameter space on your avatar ({_oscmCost} used / {_descCost} available). Reduce the parameter usage of OSCmooth to upload.", "OK");

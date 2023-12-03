@@ -45,7 +45,9 @@ namespace OSCmooth.Editor
 
 		public bool OnPreprocessAvatar(GameObject avatar)
 		{
-			if (!avatar.TryGetComponent<OSCmoothBehavior>(out var _oscm))
+			var _oscm = avatar.GetComponent<OSCmoothBehavior>();
+			EditorUtility.DisplayDialog("OSC",$"is oscm bork? {_oscm == null}","ok");
+			if (_oscm == null)
 				return false;
 
 			VRCAvatarDescriptor _avatarDescriptor = _oscm.GetComponent<VRCAvatarDescriptor>();
@@ -94,7 +96,7 @@ namespace OSCmooth.Editor
 					_layerProxyController,
 					_directory + $"Generated/Smooth/Animator_{_proxyGUID}/",
 					_directory + $"Generated/Binary/Animator_{_proxyGUID}/")
-				.CreateLayers();
+				.CreateLayer();
 
 				layers[i].animatorController = _layerProxyController;
 			}

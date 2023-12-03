@@ -7,6 +7,7 @@ using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using UnityEditor.Animations;
 using OSCmooth.Types;
+using static OSCmooth.Filters;
 
 namespace OSCmooth.Util
 {
@@ -59,7 +60,7 @@ namespace OSCmooth.Util
             {
                 _vrcParameters.Add(new VRCExpressionParameters.Parameter
                 {
-                    name = boolName,
+                    name = $"{oscmPrefix}{binaryPrefix}{boolName}",
                     valueType = VRCExpressionParameters.ValueType.Bool,
                     defaultValue = 0f,
                     saved = false,

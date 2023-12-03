@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEditor.Animations;
+using static OSCmooth.Filters;
 
 namespace OSCmooth.Util
 {
@@ -137,7 +138,7 @@ namespace OSCmooth.Util
         {
             string[] stateParams = GetAllStateMachineParameters().ToArray();
             int i = 0;
-            foreach (var oscmParam in OSCmoothFilters.ParameterExtensions)
+            foreach (var oscmParam in Filters.ParameterExtensions)
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Removing Smoothing Direct BlendTree", (float)i++/oscmParam.Count());
                 foreach (var stateParam in stateParams)
@@ -240,11 +241,8 @@ namespace OSCmooth.Util
                                                   string paramName,
                                                   string prefix)
         {
-            var proxyPrefix = "OSCm/Proxy/";
-            var smoothSuffix = "Smoother";
-
-            _animatorController.CheckAndCreateParameter(prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, smoothness);
-            _animatorController.CheckAndCreateParameter(proxyPrefix + paramName, AnimatorControllerParameterType.Float);
+            _animatorController.CheckAndCreateParameter($"{prefix}{paramName}{smootherSuffix}", AnimatorControllerParameterType.Float, smoothness);
+            _animatorController.CheckAndCreateParameter($"{oscmPrefix}{proxyPrefix}{paramName}", AnimatorControllerParameterType.Float);
             _animatorController.CheckAndCreateParameter(paramName, AnimatorControllerParameterType.Float);
 
             // Creating 3 blend trees to create the feedback loop
@@ -252,7 +250,7 @@ namespace OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = prefix + paramName + "Smoother",
+                blendParameter = $"{prefix}{paramName}{smootherSuffix}",
                 name = "OSCm_" + paramName + " Root",
                 useAutomaticThresholds = false
             };
@@ -268,13 +266,13 @@ namespace OSCmooth.Util
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = proxyPrefix + paramName,
+                blendParameter = $"{oscmPrefix}{proxyPrefix}{paramName}",
                 name = "OSCm_Driver",
                 useAutomaticThresholds = false
             };
 
             // Create smoothing anims
-            AnimationClip[] driverAnims = CreateFloatSmootherAnimation(paramName, smoothSuffix, proxyPrefix, _smoothPath);
+            AnimationClip[] driverAnims = CreateFloatSmootherAnimation(paramName, smootherSuffix, $"{oscmPrefix}{proxyPrefix}", _smoothPath);
 
             rootTree.AddChild(falseTree, 0f);
             rootTree.AddChild(trueTree, 1f);
@@ -304,7 +302,7 @@ namespace OSCmooth.Util
             var blendRootPara = "OSCm/BlendSet";
             if (combinedParameter)
             {
-                _animatorController.CheckAndCreateParameter(prefix + paramName + "Negative", AnimatorControllerParameterType.Float);
+                _animatorController.CheckAndCreateParameter($"{prefix}{paramName}Negative", AnimatorControllerParameterType.Float);
                 blendRootPara = prefix + paramName + "Negative";
             }
 

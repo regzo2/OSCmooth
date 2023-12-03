@@ -46,7 +46,6 @@ namespace OSCmooth.Editor
 		public bool OnPreprocessAvatar(GameObject avatar)
 		{
 			var _oscm = avatar.GetComponent<OSCmoothBehavior>();
-			EditorUtility.DisplayDialog("OSC",$"is oscm bork? {_oscm == null}","ok");
 			if (_oscm == null)
 				return false;
 

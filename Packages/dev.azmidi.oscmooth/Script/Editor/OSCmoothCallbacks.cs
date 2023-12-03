@@ -94,7 +94,8 @@ namespace OSCmooth.Editor
 					_layerParameters,
 					_layerProxyController,
 					_directory + $"Generated/Smooth/Animator_{_proxyGUID}/",
-					_directory + $"Generated/Binary/Animator_{_proxyGUID}/")
+					_directory + $"Generated/Binary/Animator_{_proxyGUID}/",
+					false)
 				.CreateLayer();
 
 				layers[i].animatorController = _layerProxyController;

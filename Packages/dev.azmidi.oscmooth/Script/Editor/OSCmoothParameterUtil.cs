@@ -116,12 +116,21 @@ namespace OSCmooth.Util
             });
         }
 
-        public static AnimatorControllerParameter CheckAndCreateParameter(this AnimatorController animatorController, string paramName, AnimatorControllerParameterType type, float defaultVal = 0f)
+        public static HashSet<string> existingParameterNames;
+
+        public static AnimatorControllerParameter CreateParameter(this AnimatorController animatorController,
+                                                                  HashSet<string> existingParameterNames,                                            
+                                                                  string paramName, 
+                                                                  AnimatorControllerParameterType type, 
+                                                                  bool checkForExisting,
+                                                                  float defaultVal = 0f)
         {
-            HashSet<string> existingParameterNames = new HashSet<string>(animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
-            if (existingParameterNames.Contains(paramName))
+            if (checkForExisting)
             {
-                return animatorController.parameters.First((AnimatorControllerParameter p) => p.name == paramName);
+                if (existingParameterNames.Contains(paramName))
+                {
+                    return animatorController.parameters.First((AnimatorControllerParameter p) => p.name == paramName);
+                }
             }
             AnimatorControllerParameter parameter = new AnimatorControllerParameter
             {

@@ -10,6 +10,8 @@ using OSCmooth.Util;
 using UnityEditor.Animations;
 using System.IO;
 using static OSCmooth.Filters;
+using System.Collections.Immutable;
+using System.Collections;
 
 namespace OSCmooth.Editor.Animation
 {
@@ -18,22 +20,33 @@ namespace OSCmooth.Editor.Animation
         private AnimatorController _animatorController;
         private string _animatorPath;
         private string _animatorGUID;
+        private List<Object> _animatorAssets;
         private List<OSCmoothParameter> _parameters;
         private string _smoothExportDirectory;
         private string _binaryExportDirectory;
+        private bool _saveAssetsToFiles;
+        private HashSet<string> _existingParameters;
+        private Dictionary<string, string> parameterRenameBatch = new Dictionary<string, string>();
 
         public OSCmoothAnimationHandler(List<OSCmoothParameter> parameters,
                                         AnimatorController animatorController, 
-                                        string smoothExportDirectory, 
-                                        string binaryExportDirectory)
+                                        string smoothExportDirectory,
+                                        string binaryExportDirectory,
+                                        bool saveAssetsToFiles = true)
         {
             _animatorController = animatorController;
             _animatorPath = AssetDatabase.GetAssetPath(_animatorController);
+            _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath)
+                                           .Where(a => a.GetType() == typeof(AnimatorState) || a.GetType() == typeof(BlendTree))
+                                           .ToList();
+            Debug.Log($"Loaded {_animatorAssets.Count} assets in animator");
             _animatorGUID = AssetDatabase.AssetPathToGUID(_animatorPath);
             _parameters = parameters;
             _smoothExportDirectory = smoothExportDirectory;
             _binaryExportDirectory = binaryExportDirectory;
-        }
+            _saveAssetsToFiles = saveAssetsToFiles;
+            _existingParameters = new HashSet<string>(animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
+         }
 
         public void RemoveAllOSCmoothFromController()
         {
@@ -78,6 +91,8 @@ namespace OSCmooth.Editor.Animation
 
             state.motion = rootBlend;
 
+            BatchRenameParameters();
+
             AssetDatabase.AddObjectToAsset(rootBlend, _animatorPath);
 
             AssetDatabase.StopAssetEditing();
@@ -86,7 +101,7 @@ namespace OSCmooth.Editor.Animation
 
         public BlendTree CreateSmoothBlend()
         {
-            _animatorController.CheckAndCreateParameter("IsLocal", AnimatorControllerParameterType.Float);
+            _animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Float, true);
 
             var rootBlend = new BlendTree()
             {
@@ -118,7 +133,7 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CheckAndCreateParameter($"{oscmPrefix}{blendSuffix}", AnimatorControllerParameterType.Float, 1f);
+            _animatorController.CreateParameter(_existingParameters, $"{oscmPrefix}{blendSuffix}", AnimatorControllerParameterType.Float, false, 1f);
 
             var localChildMotions = new List<ChildMotion>();
             var remoteChildMotions = new List<ChildMotion>();
@@ -129,11 +144,11 @@ namespace OSCmooth.Editor.Animation
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Smoothing Direct BlendTree", (float)i++/_parameters.Count);
                 if (p.convertToProxy)
                 {
-                    RenameAllStateMachineInstancesOfBlendParameter(p.paramName, $"{oscmPrefix}{proxyPrefix}{p.paramName}");
+                    parameterRenameBatch.Add(p.paramName, $"{oscmPrefix}{proxyPrefix}{p.paramName}");
                 }
 
-                var motionLocal = CreateSmoothingBlendTree(p.localSmoothness, p.paramName, $"{oscmPrefix}{localPrefix}");
-                var motionRemote = CreateSmoothingBlendTree(p.remoteSmoothness, p.paramName, $"{oscmPrefix}{remotePrefix}");
+                var motionLocal = CreateParameterSmoothingBlendTree(p.localSmoothness, p.paramName, $"{oscmPrefix}{localPrefix}");
+                var motionRemote = CreateParameterSmoothingBlendTree(p.remoteSmoothness, p.paramName, $"{oscmPrefix}{remotePrefix}");
 
                 localChildMotions.Add(new ChildMotion
                 {
@@ -176,7 +191,7 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CheckAndCreateParameter("OSCm/BlendSet", AnimatorControllerParameterType.Float, 1f);
+            _animatorController.CreateParameter(_existingParameters, "OSCm/BlendSet", AnimatorControllerParameterType.Float, false, 1f);
 
             var childBinary = new List<ChildMotion>();
 
@@ -220,7 +235,6 @@ namespace OSCmooth.Editor.Animation
 
         public void CleanAnimatorBlendTreeBloat(string filter)
         {
-            var _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath);
             foreach (Object asset in _animatorAssets)
             {
                 if (asset?.GetType() == typeof(BlendTree) && asset != null)
@@ -233,43 +247,40 @@ namespace OSCmooth.Editor.Animation
             }
         }
 
-        public void RenameAllStateMachineInstancesOfBlendParameter(string initParameter, string newParameter)
+        public void BatchRenameParameters()
         {
-            var _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath);
             foreach (Object asset in _animatorAssets)
             {
                 switch (asset)
                 {
                     case BlendTree blendTree:
-                        Debug.Log($"Rewriting parameter for:{blendTree.name} in {_animatorController.name} to {newParameter}");
-                        if (blendTree.blendParameter == initParameter)
-                            blendTree.blendParameter = newParameter;
+                        if (parameterRenameBatch.TryGetValue(blendTree.blendParameter, out string _newBlend))
+                            blendTree.blendParameter = _newBlend;
 
-                        if (blendTree.blendParameterY == initParameter)
-                            blendTree.blendParameterY = newParameter;
+                        if (parameterRenameBatch.TryGetValue(blendTree.blendParameterY, out string _newBlendY))
+                            blendTree.blendParameterY = _newBlendY;
 
                         var _children = blendTree.children;
                         for (int i = 0; i < blendTree.children.Length; i++)
                         {
-                            if (_children[i].directBlendParameter == initParameter)
-                                _children[i].directBlendParameter = newParameter;
+                            if (parameterRenameBatch.TryGetValue(_children[i].directBlendParameter, out string _newDirectParameter))
+                                _children[i].directBlendParameter = _newDirectParameter;
                         }
                         blendTree.children = _children;
                         break;
 
                     case AnimatorState animatorState:
-                        Debug.Log($"Rewriting parameter for:{animatorState.name} in {_animatorController.name} to {newParameter}");
-                        if (animatorState.timeParameter == initParameter)
-                            animatorState.timeParameter = newParameter;
+                        if (parameterRenameBatch.TryGetValue(animatorState.timeParameter, out string _newTime))
+                            animatorState.timeParameter = _newTime;
 
-                        if (animatorState.speedParameter == initParameter)
-                            animatorState.speedParameter = newParameter;
+                        if (parameterRenameBatch.TryGetValue(animatorState.speedParameter, out string _newSpeed))
+                            animatorState.speedParameter = _newSpeed;
 
-                        if (animatorState.cycleOffsetParameter == initParameter)
-                            animatorState.cycleOffsetParameter = newParameter;
+                        if (parameterRenameBatch.TryGetValue(animatorState.cycleOffsetParameter, out string _newOffset))
+                            animatorState.cycleOffsetParameter = _newOffset;
 
-                        if (animatorState.mirrorParameter == initParameter)
-                            animatorState.mirrorParameter = newParameter;
+                        if (parameterRenameBatch.TryGetValue(animatorState.mirrorParameter,out string _newMirror))
+                            animatorState.mirrorParameter = _newMirror;
                         break;
                 }
             }
@@ -277,7 +288,6 @@ namespace OSCmooth.Editor.Animation
         
         public List<string> GetAllStateMachineParameters()
         {
-            var _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath);
             List<string> stateParams = new List<string>();
 
             foreach (Object asset in _animatorAssets)
@@ -324,7 +334,7 @@ namespace OSCmooth.Editor.Animation
                 {
                     if (stateParam.Contains(oscmParam))
                     {
-                        RenameAllStateMachineInstancesOfBlendParameter(stateParam, stateParam.Replace(oscmParam, ""));
+                        parameterRenameBatch.Add(stateParam, stateParam.Replace(oscmParam, ""));
                     }
                 }
             }
@@ -416,16 +426,16 @@ namespace OSCmooth.Editor.Animation
             return new AnimationClip[] { _animationClipInit, _animationClipFinal };
         }
 
-        public BlendTree CreateSmoothingBlendTree(float smoothness,
+        public BlendTree CreateParameterSmoothingBlendTree(float smoothness,
                                                   string paramName,
                                                   string prefix)
         {
             var proxyPrefix = "OSCm/Proxy/";
             var smoothSuffix = "Smoother";
 
-            _animatorController.CheckAndCreateParameter(prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, smoothness);
-            _animatorController.CheckAndCreateParameter(proxyPrefix + paramName, AnimatorControllerParameterType.Float);
-            _animatorController.CheckAndCreateParameter(paramName, AnimatorControllerParameterType.Float);
+            _animatorController.CreateParameter(_existingParameters, prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, false, smoothness);
+            _animatorController.CreateParameter(_existingParameters, proxyPrefix + paramName, AnimatorControllerParameterType.Float, false);
+            _animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true);
 
             // Creating 3 blend trees to create the feedback loop
             BlendTree rootTree = new BlendTree
@@ -484,7 +494,7 @@ namespace OSCmooth.Editor.Animation
             var blendRootPara = "OSCm/BlendSet";
             if (combinedParameter)
             {
-                _animatorController.CheckAndCreateParameter(prefix + paramName + "Negative", AnimatorControllerParameterType.Float);
+                _animatorController.CreateParameter(_existingParameters, prefix + paramName + "Negative", AnimatorControllerParameterType.Float, true);
                 blendRootPara = prefix + paramName + "Negative";
             }
 
@@ -534,14 +544,23 @@ namespace OSCmooth.Editor.Animation
 
         public AnimationClip FindOrCreateAnimationClip(string directory, string paramName, AnimationCurve curve)
         {
-            AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(directory);
-
-            if (clip == null)
+            AnimationClip clip = null;
+            if (!_saveAssetsToFiles)
             {
                 clip = new AnimationClip();
-                AssetDatabase.CreateAsset(clip, directory);
+                AssetDatabase.AddObjectToAsset(clip, _animatorPath);
             }
-            else clip.ClearCurves();
+            else
+            {
+                clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(directory);
+
+                if (clip == null)
+                {
+                    clip = new AnimationClip();
+                    AssetDatabase.CreateAsset(clip, directory);
+                }
+                else clip.ClearCurves();
+            }
 
             clip.SetCurve("", typeof(Animator), paramName, curve);
 
@@ -566,7 +585,7 @@ namespace OSCmooth.Editor.Animation
         {
             string prefix = "OSCm/Binary/";
             float binaryPowValue = Mathf.Pow(2, binaryPow);
-            _animatorController.CheckAndCreateParameter(prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float);
+            _animatorController.CreateParameter(_existingParameters, prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float, false);
 
             BlendTree decodeBinary = new BlendTree
             {

@@ -37,7 +37,7 @@ namespace OSCmooth.Editor.Animation
             _animatorController = animatorController;
             _animatorPath = AssetDatabase.GetAssetPath(_animatorController);
             _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath)
-                                           .Where(a => a.GetType() == typeof(AnimatorState) || a.GetType() == typeof(BlendTree))
+                                           .Where(a => a != null && (a.GetType() == typeof(AnimatorState) || a.GetType() == typeof(BlendTree)))
                                            .ToList();
             Debug.Log($"Loaded {_animatorAssets.Count} assets in animator");
             _animatorGUID = AssetDatabase.AssetPathToGUID(_animatorPath);

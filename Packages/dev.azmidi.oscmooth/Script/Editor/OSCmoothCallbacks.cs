@@ -47,7 +47,7 @@ namespace OSCmooth.Editor
 		{
 			var _oscm = avatar.GetComponent<OSCmoothBehavior>();
 			if (_oscm == null)
-				return false;
+				return true;
 
 			VRCAvatarDescriptor _avatarDescriptor = _oscm.GetComponent<VRCAvatarDescriptor>();
 			_oscm.prevLayers = new CustomAnimLayer[_avatarDescriptor.baseAnimationLayers.Length];
@@ -56,9 +56,12 @@ namespace OSCmooth.Editor
 
 			_oscm.prevParameterPath = AssetDatabase.GetAssetPath(_avatarDescriptor.expressionParameters);
 
+			System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
 			ApplyParameters(_avatarDescriptor, _oscm);
 			ApplyAnimationLayers(_avatarDescriptor, _oscm);
 			AssetDatabase.SaveAssets();
+			watch.Stop();
+			Debug.Log($"Time OSCmooth took to generate: {watch.ElapsedMilliseconds} ms");
 			_oscm.hasPreprocessed = true;
 			return true;
 		}

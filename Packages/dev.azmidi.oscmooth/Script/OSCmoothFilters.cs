@@ -24,7 +24,7 @@ namespace OSCmooth
         {
             "_OSCmooth_Smoothing_WD_Gen", "_OSCmooth_Smoothing_Gen"
         };
-        public static readonly string[] ParameterExtensions =
+        public static readonly string[] ParameterNames =
         {
             "OSCm/Proxy/", "OSCm_Proxy"
         };

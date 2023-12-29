@@ -13,6 +13,7 @@ using static OSCmooth.Filters;
 using System.Collections.Immutable;
 using System.Collections;
 using VRC.SDK3.Avatars.Components;
+using System.Reflection;
 
 namespace OSCmooth.Editor.Animation
 {
@@ -108,7 +109,7 @@ namespace OSCmooth.Editor.Animation
 
         public BlendTree CreateSmoothLayer()
         {
-            _animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Float, true);
+            _animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Float, false, false);
 
             var rootBlend = new BlendTree()
             {
@@ -140,7 +141,7 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CreateParameter(_existingParameters, $"{oscmPrefix}{blendSuffix}", AnimatorControllerParameterType.Float, false, 1f);
+            _animatorController.CreateParameter(_existingParameters, $"{oscmPrefix}{blendSuffix}", AnimatorControllerParameterType.Float, false, false, 1f);
 
             var localChildMotions = new List<ChildMotion>();
             var remoteChildMotions = new List<ChildMotion>();
@@ -151,7 +152,7 @@ namespace OSCmooth.Editor.Animation
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Smoothing Direct BlendTree", (float)i++/_parameters.Count);
                 if (p.convertToProxy)
                 {
-                    parameterRenameBatch.Add(p.paramName, $"{oscmPrefix}{proxyPrefix}{p.paramName}");
+                    parameterRenameBatch.Add(p.paramName, _useEncoding ? ParameterExtensions.Obfuscate($"{oscmPrefix}{proxyPrefix}{p.paramName}") : $"{oscmPrefix}{proxyPrefix}{p.paramName}");
                 }
 
                 var motionLocal = CreateParameterSmoothingBlendTree(p.localSmoothness, p.paramName, $"{oscmPrefix}{localPrefix}");
@@ -198,7 +199,7 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CreateParameter(_existingParameters, "OSCm/BlendSet", AnimatorControllerParameterType.Float, false, 1f);
+            _animatorController.CreateParameter(_existingParameters, "OSCm/BlendSet", AnimatorControllerParameterType.Float, false, false, 1f);
 
             var childBinary = new List<ChildMotion>();
 
@@ -336,7 +337,7 @@ namespace OSCmooth.Editor.Animation
         {
             string[] stateParams = GetAllStateMachineParameters().ToArray();
             int i = 0;
-            foreach (var oscmParam in Filters.ParameterExtensions)
+            foreach (var oscmParam in Filters.ParameterNames)
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Removing Smoothing Direct BlendTree", (float)i++/oscmParam.Count());
                 foreach (var stateParam in stateParams)
@@ -414,7 +415,7 @@ namespace OSCmooth.Editor.Animation
         {
             var _layer = CreateAnimLayerInController($"_OSCm_{paramName}_Encode", 1f);
 
-            _animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true);
+            _animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true, false);
 
             int binaryRes = (int)Mathf.Pow(2, binarySizeSelection);
             int binaryStates = binaryRes;
@@ -444,7 +445,7 @@ namespace OSCmooth.Editor.Animation
                     var _parameter = new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
                     {
                         source = paramName,
-                        name = $"{oscmPrefix}{binaryPrefix}{paramName}{binaryNegativeSuffix}",
+                        name = ParameterExtensions.Obfuscate($"{oscmPrefix}{binaryPrefix}{paramName}{binaryNegativeSuffix}"),
                         type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Copy,
                         convertRange = true,
                         sourceMin = 0f,
@@ -462,7 +463,7 @@ namespace OSCmooth.Editor.Animation
                     Debug.Log($"i % (1 << j) : {(i % (1 << j))}");
                     _paramDriver.parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
                     {
-                        name = $"{oscmPrefix}{binaryPrefix}{paramName}{1 << j}",
+                        name = ParameterExtensions.Obfuscate($"{oscmPrefix}{binaryPrefix}{paramName}{1 << j}"),
                         type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
                         value = ((i >> j) & 1) == 1 ? 1f : 0f
                     });
@@ -499,23 +500,23 @@ namespace OSCmooth.Editor.Animation
         }
 
         public BlendTree CreateParameterSmoothingBlendTree(float smoothness,
-                                                  string paramName,
-                                                  string prefix)
+                                                           string paramName,
+                                                           string prefix)
         {
             var proxyPrefix = "OSCm/Proxy/";
             var binaryProxyPrefix = "OSCm/Binary/Proxy/";
             var smoothSuffix = "Smoother";
 
-            _animatorController.CreateParameter(_existingParameters, prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, false, smoothness);
-            _animatorController.CreateParameter(_existingParameters, proxyPrefix + paramName, AnimatorControllerParameterType.Float, false);
-            _animatorController.CreateParameter(_existingParameters, binaryProxyPrefix + paramName, AnimatorControllerParameterType.Float, true);
+            _animatorController.CreateParameter(_existingParameters, prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, false, _useEncoding, smoothness);
+            _animatorController.CreateParameter(_existingParameters, proxyPrefix + paramName, AnimatorControllerParameterType.Float, false, _useEncoding);
+            _animatorController.CreateParameter(_existingParameters, binaryProxyPrefix + paramName, AnimatorControllerParameterType.Float, false, _useEncoding);
 
             // Creating 3 blend trees to create the feedback loop
             BlendTree rootTree = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = prefix + paramName + "Smoother",
+                blendParameter = _useEncoding ? ParameterExtensions.Obfuscate(prefix + paramName + "Smoother") : prefix + paramName + "Smoother",
                 name = "OSCm_" + paramName + " Root",
                 useAutomaticThresholds = false
             };
@@ -523,7 +524,7 @@ namespace OSCmooth.Editor.Animation
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = binaryProxyPrefix + paramName,
+                blendParameter = _useEncoding ? ParameterExtensions.Obfuscate(binaryProxyPrefix + paramName) : binaryProxyPrefix + paramName,
                 name = "OSCm_Input",
                 useAutomaticThresholds = false
             };
@@ -531,7 +532,7 @@ namespace OSCmooth.Editor.Animation
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = proxyPrefix + paramName,
+                blendParameter = _useEncoding ? ParameterExtensions.Obfuscate(proxyPrefix + paramName) : proxyPrefix + paramName,
                 name = "OSCm_Driver",
                 useAutomaticThresholds = false
             };
@@ -564,8 +565,8 @@ namespace OSCmooth.Editor.Animation
             var _rootParameter = "OSCm/BlendSet";
             if (combinedParameter)
             {
-                _animatorController.CreateParameter(_existingParameters, _prefix + paramName + "Negative", AnimatorControllerParameterType.Float, true);
-                _rootParameter = _prefix + paramName + "Negative";
+                _animatorController.CreateParameter(_existingParameters, _prefix + paramName + "Negative", AnimatorControllerParameterType.Float, true, _useEncoding);
+                _rootParameter = _useEncoding ? ParameterExtensions.Obfuscate(_prefix + paramName + "Negative") : _prefix + paramName + "Negative";
             }
 
             BlendTree _decodeBinaryRoot = new BlendTree
@@ -652,7 +653,7 @@ namespace OSCmooth.Editor.Animation
                 else clip.ClearCurves();
             }
 
-            clip.SetCurve("", typeof(Animator), paramName, curve);
+            clip.SetCurve("", typeof(Animator), _useEncoding ? ParameterExtensions.Obfuscate(paramName) : paramName, curve);
 
             return clip;
         }
@@ -676,19 +677,21 @@ namespace OSCmooth.Editor.Animation
             string prefix = "OSCm/Binary/";
             var binaryProxyPrefix = "OSCm/Binary/Proxy/";
             float binaryPowValue = Mathf.Pow(2, binaryPow);
-            _animatorController.CreateParameter(_existingParameters, prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float, true);
+            _animatorController.CreateParameter(_existingParameters, prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float, true, _useEncoding);
 
             BlendTree decodeBinary = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = prefix + paramName + (int)binaryPowValue,
+                blendParameter = _useEncoding ? ParameterExtensions.Obfuscate(prefix + paramName + (int)binaryPowValue) : prefix + paramName + (int)binaryPowValue,
                 name = $"Binary_{paramName}_Decode_{(negative ? "Negative_" : "")}{binaryPowValue}",
                 useAutomaticThresholds = false
             };
 
             // Create Decode anims and weight per binary
-            AnimationClip[] decodeAnims = CreateBinaryDecodeAnimation(binaryProxyPrefix + paramName, directory, (negative ? -1f : 1f) * binaryPowValue / (Mathf.Pow(2, binarySize) - 1f), binaryPow);
+            AnimationClip[] decodeAnims = CreateBinaryDecodeAnimation(binaryProxyPrefix + paramName, 
+                                                                      directory, (negative ? -1f : 1f) * binaryPowValue / (Mathf.Pow(2, binarySize) - 1f), 
+                                                                      binaryPow);
             decodeBinary.AddChild(decodeAnims[0], 0f);
             decodeBinary.AddChild(decodeAnims[1], 1f);
 

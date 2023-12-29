@@ -98,8 +98,8 @@ namespace OSCmooth.Editor
 					_layerProxyController,
 					_directory + $"Generated/Smooth/Animator_{_proxyGUID}/",
 					_directory + $"Generated/Binary/Animator_{_proxyGUID}/",
-					true,
-					false
+					oscm.setup.configParam.binaryEncoding,
+					true
 				)
 				.CreateLayer();
 

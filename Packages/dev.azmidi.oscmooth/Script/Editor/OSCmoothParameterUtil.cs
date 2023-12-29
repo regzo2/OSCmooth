@@ -65,13 +65,13 @@ namespace OSCmooth.Util
                     var binaryName = $"{oscmPrefix}{binaryPrefix}{oscmParam.paramName}";
                     for (int binarySize = 0; binarySize < oscmParam.binarySizeSelection; binarySize++)
                     {
-                        AddParameter($"{binaryName}{1 << binarySize}",
+                        AddParameter(Obfuscate($"{binaryName}{1 << binarySize}"),
                                      VRCExpressionParameters.ValueType.Bool,
                                      true);
                     }
                     if (oscmParam.binaryNegative)
                     {
-                        AddParameter($"{binaryName}Negative",
+                        AddParameter(Obfuscate($"{binaryName}Negative"),
                                      VRCExpressionParameters.ValueType.Bool,
                                      true);
                     }
@@ -129,30 +129,58 @@ namespace OSCmooth.Util
 
         private static HashSet<string> existingParameterNames;
 
+        public static string Obfuscate(string name)
+        {
+            // Simple Ceasar cypher.
+            var shift = 16;
+            var maxChar = Convert.ToInt32(char.MaxValue);
+            var minChar = Convert.ToInt32(char.MinValue);
+
+            var buffer = name.ToCharArray();
+            for (var i = 0; i < buffer.Length; i++)
+            {
+                var shifted = Convert.ToInt32(buffer[i]) + shift;
+
+                if (shifted > maxChar)
+                {
+                    shifted -= maxChar;
+                }
+                else if (shifted < minChar)
+                {
+                    shifted += maxChar;
+                }
+                buffer[i] = Convert.ToChar(shifted);
+            }
+
+            return new string(buffer);
+        }
+
         public static AnimatorControllerParameter CreateParameter(this AnimatorController animatorController,
                                                                   HashSet<string> existingParameterNames,                                            
                                                                   string paramName, 
                                                                   AnimatorControllerParameterType type, 
                                                                   bool checkForExisting,
+                                                                  bool obfuscate,
                                                                   float defaultVal = 0f)
         {
+            var _paramName = obfuscate ? Obfuscate(paramName) : paramName;
             if (checkForExisting)
             {
-                if (existingParameterNames.Contains(paramName))
+                if (existingParameterNames.Contains(_paramName))
                 {
-                    return animatorController.parameters.First((AnimatorControllerParameter p) => p.name == paramName);
+                    return animatorController.parameters.First((AnimatorControllerParameter p) => p.name == _paramName);
                 }
             }
             AnimatorControllerParameter parameter = new AnimatorControllerParameter
             {
-                name = paramName,
+                name = _paramName,
                 type = type,
                 defaultFloat = defaultVal,
                 defaultInt = (int)defaultVal,
                 defaultBool = Convert.ToBoolean(defaultVal)
             };
             animatorController.AddParameter(parameter);
-            existingParameterNames.Add(paramName);
+            existingParameterNames.Add(_paramName);
             return parameter;
         }
     }

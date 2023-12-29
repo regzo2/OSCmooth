@@ -24,6 +24,7 @@ namespace OSCmooth.Types
         public bool convertToProxy = true;
         public int binarySizeSelection = 0;
         public bool binaryNegative = false;
+        public bool binaryEncoding = false;
         public bool isVisible = false;
     }
 

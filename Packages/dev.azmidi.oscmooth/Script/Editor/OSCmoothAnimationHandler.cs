@@ -12,6 +12,7 @@ using System.IO;
 using static OSCmooth.Filters;
 using System.Collections.Immutable;
 using System.Collections;
+using VRC.SDK3.Avatars.Components;
 
 namespace OSCmooth.Editor.Animation
 {
@@ -21,10 +22,12 @@ namespace OSCmooth.Editor.Animation
         private string _animatorPath;
         private string _animatorGUID;
         private List<Object> _animatorAssets;
+
         private List<OSCmoothParameter> _parameters;
         private string _smoothExportDirectory;
         private string _binaryExportDirectory;
         private bool _saveAssetsToFiles;
+        private bool _useEncoding;
         private HashSet<string> _existingParameters;
         private Dictionary<string, string> parameterRenameBatch = new Dictionary<string, string>();
 
@@ -32,6 +35,7 @@ namespace OSCmooth.Editor.Animation
                                         AnimatorController animatorController, 
                                         string smoothExportDirectory,
                                         string binaryExportDirectory,
+                                        bool useEncoding = false,
                                         bool saveAssetsToFiles = true)
         {
             _animatorController = animatorController;
@@ -46,6 +50,7 @@ namespace OSCmooth.Editor.Animation
             _binaryExportDirectory = binaryExportDirectory;
             _saveAssetsToFiles = saveAssetsToFiles;
             _existingParameters = new HashSet<string>(animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
+            _useEncoding = useEncoding;
          }
 
         public void RemoveAllOSCmoothFromController()
@@ -72,6 +77,8 @@ namespace OSCmooth.Editor.Animation
             };
 
             List<BlendTree> _trees = new List<BlendTree>();
+            foreach (var p in _parameters.Where(pa => pa.binaryEncoding))
+                CreateBinaryEncoderLayer(p.paramName, p.binarySizeSelection, p.binaryNegative);
             if (_parameters.Any(p => p.binarySizeSelection > 0))
                 _trees.Add(CreateBinaryDecoderLayer());
             _trees.Add(CreateSmoothLayer());
@@ -242,6 +249,7 @@ namespace OSCmooth.Editor.Animation
                     if (((BlendTree)asset).name.Contains(filter))
                     {
                         Object.DestroyImmediate(asset, true);
+                        _animatorAssets.Remove(asset);
                     }
                 }
             }
@@ -251,6 +259,7 @@ namespace OSCmooth.Editor.Animation
         {
             foreach (Object asset in _animatorAssets)
             {
+                if (asset == null) continue;
                 switch (asset)
                 {
                     case BlendTree blendTree:
@@ -399,6 +408,69 @@ namespace OSCmooth.Editor.Animation
             _animatorController.AddLayer(layer);
 
             return layer;
+        }
+
+        public void CreateBinaryEncoderLayer(string paramName, int binarySizeSelection, bool combinedParameter)
+        {
+            var _layer = CreateAnimLayerInController($"_OSCm_{paramName}_Encode", 1f);
+
+            _animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true);
+
+            int binaryRes = (int)Mathf.Pow(2, binarySizeSelection);
+            int binaryStates = binaryRes;
+
+            for (int i = 0; i < binaryStates; i++)
+            {
+                var _state = _layer.stateMachine.AddState($"{paramName}{i}", new Vector3(400f, (i - (binaryStates/2)) * 40, 0f));
+                _state.speed = 10000f;
+
+                var _paramDriver = new VRCAvatarParameterDriver();
+
+                var _transition = _layer.stateMachine.AddEntryTransition(_state);
+                _transition.AddCondition(AnimatorConditionMode.Greater, ((float)i/(float)binaryStates) - 0.0001f, paramName);
+                if (i != binaryStates - 1)
+                    _transition.AddCondition(AnimatorConditionMode.Less, ((float)(i+1)/(float)binaryStates) + 0.0001f, paramName);
+
+                var _exit = _state.AddExitTransition(true);
+                _exit.exitTime = 0f;
+                _exit.duration = 0f;
+
+                if (combinedParameter)
+                {
+                    var _negativeTrans = _layer.stateMachine.AddEntryTransition(_state);
+                _negativeTrans.AddCondition(AnimatorConditionMode.Less, ((float)-i/(float)binaryStates) + 0.0001f, paramName);
+                if (i != binaryStates - 1)
+                    _negativeTrans.AddCondition(AnimatorConditionMode.Greater, ((float)-(i+1)/(float)binaryStates) - 0.0001f, paramName);
+                    var _parameter = new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
+                    {
+                        source = paramName,
+                        name = $"{oscmPrefix}{binaryPrefix}{paramName}{binaryNegativeSuffix}",
+                        type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Copy,
+                        convertRange = true,
+                        sourceMin = 0f,
+                        sourceMax = -.0001f,
+                        valueMin = 0f,
+                        valueMax = 1f,
+                        destMin = 0f,
+                        destMax = 1f,
+                    };
+                    _paramDriver.parameters.Add(_parameter);
+                }
+
+                for (int j = 0; j < binarySizeSelection; j++) 
+                {
+                    Debug.Log($"i % (1 << j) : {(i % (1 << j))}");
+                    _paramDriver.parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
+                    {
+                        name = $"{oscmPrefix}{binaryPrefix}{paramName}{1 << j}",
+                        type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
+                        value = ((i >> j) & 1) == 1 ? 1f : 0f
+                    });
+                }
+
+                _state.behaviours = new StateMachineBehaviour[] { _paramDriver };
+                AssetDatabase.AddObjectToAsset(_paramDriver, _animatorPath);
+            }
         }
 
         public AnimationClip[] CreateFloatSmootherAnimation(string paramName, 

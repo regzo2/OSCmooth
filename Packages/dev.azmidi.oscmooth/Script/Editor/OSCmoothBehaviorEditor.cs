@@ -20,8 +20,9 @@ public class OSCmoothBehaviorEditor : Editor
     private int _oscmUsage;
     private bool _showGlobalConfiguration = false;
     private bool _settings;
-    private bool _debugShow;
-    private bool _useBinary = true;
+    private bool _debugShow = true;
+    private bool _useBinaryDecoder = true;
+    private bool _useBinaryEncoder = true;
     private bool _debug;
 
     private readonly string[] binarySizeOptions = new string[8] 
@@ -64,15 +65,27 @@ public class OSCmoothBehaviorEditor : Editor
                 new GUIContent("Show Debug Options", 
                                "Shows debug options."), 
                                _debugShow);
-            _useBinary = EditorGUILayout.Toggle(
-                new GUIContent("(Experimental) Binary Parameters", 
-                               "(Experimental) Shows Binary Parameter options for parameter configuration."), 
-                               _useBinary);
+
+            _useBinaryDecoder = EditorGUILayout.Toggle(
+                new GUIContent("Binary Parameters", 
+                               "Shows Binary Parameter options for parameter configuration."), 
+                               _useBinaryDecoder);
+
+            if (_useBinaryDecoder)
+            {
+                _useBinaryEncoder = EditorGUILayout.Toggle(
+                new GUIContent("(Experimental) Binary Parameter Encoder", 
+                               "(Experimental) Allows binary parameters to be encoded directly in the animator.\n\n" +
+                               "NOTE: This will only be run locally on the avatar, and should not affect performance of remote users."), 
+                               _useBinaryEncoder);
+            }
         }
 
         if (!_debugShow)
             return;
+
         _debug = EditorGUILayout.Foldout(_debug, "Debug");
+
         if (_debug)
         {
             if (GUILayout.Button(
@@ -110,7 +123,7 @@ public class OSCmoothBehaviorEditor : Editor
                                "OSCmooth can manage them (such as creating binary parameters)."), 
                 Array.Empty<GUILayoutOption>()))
             {
-                _setup.parameters.CreateExpressionParameters(_avatarDescriptor, $"Assets/OSCmooth/Temp/{((OSCmoothBehavior)target).gameObject.name}/");
+                _setup.CreateExpressionParameters(_avatarDescriptor, $"Assets/OSCmooth/Temp/{((OSCmoothBehavior)target).gameObject.name}/");
                 AssetDatabase.SaveAssets();
             }
             if (GUILayout.Button(
@@ -134,7 +147,10 @@ public class OSCmoothBehaviorEditor : Editor
 
     private void DrawAnimationLayerSelection(VRCAvatarDescriptor avatarDescriptor)
     {
-        if (GUILayout.Button(new GUIContent("Use Playable Layer Parameters", "Populates the parameter list with existing float parameters in all available Playable Layers on your avatar."), Array.Empty<GUILayoutOption>()))
+        if (GUILayout.Button(
+            new GUIContent("Use Playable Layer Parameters", 
+                           "Populates the parameter list with existing float parameters in all available Playable Layers on your avatar."), 
+            Array.Empty<GUILayoutOption>()))
         {
             List<OSCmoothParameter> _layerParameters = new List<OSCmoothParameter>();
 
@@ -165,6 +181,7 @@ public class OSCmoothBehaviorEditor : Editor
                         paramName = parameter.name,
                         layerMask = layerMask,
                         binarySizeSelection = _setup.configParam.binarySizeSelection,
+                        binaryEncoding = _useBinaryEncoder,
                         localSmoothness = _setup.configParam.localSmoothness,
                         remoteSmoothness = _setup.configParam.remoteSmoothness,
                         binaryNegative = _setup.configParam.binaryNegative,
@@ -243,7 +260,8 @@ public class OSCmoothBehaviorEditor : Editor
                 remoteSmoothness = _configParam.remoteSmoothness,
                 convertToProxy = _configParam.convertToProxy,
                 binarySizeSelection = _configParam.binarySizeSelection,
-                binaryNegative = _configParam.binaryNegative
+                binaryNegative = _configParam.binaryNegative,
+                binaryEncoding = _useBinaryEncoder,
             };
             _setup.parameters.Add(param);
             AssetDatabase.SaveAssets();
@@ -255,12 +273,13 @@ public class OSCmoothBehaviorEditor : Editor
         EditorGUI.indentLevel = 2;
         EditorGUIUtility.labelWidth = 220f;
 
-        float localSmoothness = parameter.localSmoothness;
-        float remoteSmoothness = parameter.remoteSmoothness;
-        bool convertToProxy = parameter.convertToProxy;
-        int binarySizeSelection = parameter.binarySizeSelection;
-        bool binaryNegative = parameter.binaryNegative;
-        AnimLayerTypeMask layerMask = parameter.layerMask;
+        var localSmoothness = parameter.localSmoothness;
+        var remoteSmoothness = parameter.remoteSmoothness;
+        var convertToProxy = parameter.convertToProxy;
+        var binarySizeSelection = parameter.binarySizeSelection;
+        var binaryNegative = parameter.binaryNegative;
+        var binaryEncoding = parameter.binaryEncoding;
+        var layerMask = parameter.layerMask;
 
         EditorGUI.BeginChangeCheck();
 
@@ -286,7 +305,7 @@ public class OSCmoothBehaviorEditor : Editor
                            "What playable layers should this parameter have OSCmooth be applied."), 
             layerMask);
 
-        if (_useBinary)
+        if (_useBinaryDecoder)
         {
             binarySizeSelection = EditorGUILayout.Popup(
                 new GUIContent("Binary Resolution", 
@@ -296,11 +315,22 @@ public class OSCmoothBehaviorEditor : Editor
                 binarySizeSelection, 
                 binarySizeOptions);
 
-            binaryNegative = EditorGUILayout.Toggle(
-                new GUIContent("Binary Negative (+1 Bit)", 
-                               "Can this parameter output negative values? This option will add an extra bool to " +
-                               "keep track of the negative values of the parameter."), 
-                binaryNegative);
+            if (_useBinaryEncoder && binarySizeSelection > 0)
+                binaryEncoding = EditorGUILayout.Toggle(
+                    new GUIContent("Binary Encoder",
+                                   "Should the binary encoding be done on the avatar itself?" +
+                                   "\n\nNOTE: This is expected to decrease performance locally. " +
+                                   "If your input (eg. by OSC driven parameters) is already binary encoded it " +
+                                   "is recommended to leave this disabled. This also only runs on the local user so " +
+                                   "remote users will not experience any performance degradation."),
+                    binaryEncoding);
+
+            if (binarySizeSelection > 0)
+                binaryNegative = EditorGUILayout.Toggle(
+                    new GUIContent("Binary Negative (+1 Bit)", 
+                                   "Can this parameter output negative values? This option will add an extra bool to " +
+                                   "keep track of the negative values of the parameter."), 
+                    binaryNegative);
         }
 
         if (EditorGUI.EndChangeCheck())
@@ -309,8 +339,9 @@ public class OSCmoothBehaviorEditor : Editor
             parameter.remoteSmoothness = remoteSmoothness;
             parameter.convertToProxy = convertToProxy;
             parameter.layerMask = layerMask;
-            parameter.binarySizeSelection = (_useBinary ? binarySizeSelection : 0);
-            parameter.binaryNegative = _useBinary && binaryNegative;
+            parameter.binarySizeSelection = (_useBinaryDecoder ? binarySizeSelection : 0);
+            parameter.binaryNegative = _useBinaryDecoder && binaryNegative;
+            parameter.binaryEncoding = _useBinaryEncoder && binaryEncoding;
         }
 
         EditorGUILayout.BeginHorizontal();

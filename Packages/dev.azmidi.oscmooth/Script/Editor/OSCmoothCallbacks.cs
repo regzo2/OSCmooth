@@ -98,7 +98,9 @@ namespace OSCmooth.Editor
 					_layerProxyController,
 					_directory + $"Generated/Smooth/Animator_{_proxyGUID}/",
 					_directory + $"Generated/Binary/Animator_{_proxyGUID}/",
-					false)
+					true,
+					false
+				)
 				.CreateLayer();
 
 				layers[i].animatorController = _layerProxyController;
@@ -114,7 +116,7 @@ namespace OSCmooth.Editor
 					Directory.CreateDirectory(_directory);
 					Debug.Log("Directory created: " + _directory);
 				}
-			oscm.setup.parameters.CreateExpressionParameters(avatarDescriptor, _directory);
+			oscm.setup.CreateExpressionParameters(avatarDescriptor, _directory);
 		}
 	}
 }

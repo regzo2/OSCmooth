@@ -73,8 +73,8 @@ namespace OSCmooth.Editor.Animation
 
             List<BlendTree> _trees = new List<BlendTree>();
             if (_parameters.Any(p => p.binarySizeSelection > 0))
-                _trees.Add(CreateBinaryBlend());
-            _trees.Add(CreateSmoothBlend());
+                _trees.Add(CreateBinaryDecoderLayer());
+            _trees.Add(CreateSmoothLayer());
 
             var childs = new List<ChildMotion>();
             foreach (var tree in _trees)
@@ -99,7 +99,7 @@ namespace OSCmooth.Editor.Animation
             AssetDatabase.SaveAssets();
         }
 
-        public BlendTree CreateSmoothBlend()
+        public BlendTree CreateSmoothLayer()
         {
             _animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Float, true);
 
@@ -178,7 +178,7 @@ namespace OSCmooth.Editor.Animation
             return rootBlend;
         }
 
-        public BlendTree CreateBinaryBlend()
+        public BlendTree CreateBinaryDecoderLayer()
         {
             // Creating BlendTree objects to better customize them in the AC Editor         
 
@@ -201,7 +201,7 @@ namespace OSCmooth.Editor.Animation
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Binary Parameter Direct BlendTree", (float)i++/_parameters.Count);
                 if (p.binarySizeSelection == 0) continue;
-                var decodeBinary = CreateBinaryBlendTree(p.paramName, p.binarySizeSelection, p.binaryNegative);
+                var decodeBinary = CreateBinaryDecoder(p.paramName, p.binarySizeSelection, p.binaryNegative);
 
                 childBinary.Add(new ChildMotion
                 {
@@ -371,7 +371,7 @@ namespace OSCmooth.Editor.Animation
             EditorUtility.ClearProgressBar();
         }
 
-        public AnimatorControllerLayer CreateAnimLayerInController(string layerName)
+        public AnimatorControllerLayer CreateAnimLayerInController(string layerName, float defaultWeight = 1f)
         {
             for (int i = 0; i < _animatorController.layers.Length; i++)
             {
@@ -389,7 +389,7 @@ namespace OSCmooth.Editor.Animation
                     name = layerName,
                     hideFlags = HideFlags.HideInHierarchy
                 },
-                defaultWeight = 1f
+                defaultWeight = defaultWeight
             };
 
 
@@ -431,11 +431,12 @@ namespace OSCmooth.Editor.Animation
                                                   string prefix)
         {
             var proxyPrefix = "OSCm/Proxy/";
+            var binaryProxyPrefix = "OSCm/Binary/Proxy/";
             var smoothSuffix = "Smoother";
 
             _animatorController.CreateParameter(_existingParameters, prefix + paramName + smoothSuffix, AnimatorControllerParameterType.Float, false, smoothness);
             _animatorController.CreateParameter(_existingParameters, proxyPrefix + paramName, AnimatorControllerParameterType.Float, false);
-            _animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true);
+            _animatorController.CreateParameter(_existingParameters, binaryProxyPrefix + paramName, AnimatorControllerParameterType.Float, true);
 
             // Creating 3 blend trees to create the feedback loop
             BlendTree rootTree = new BlendTree
@@ -450,7 +451,7 @@ namespace OSCmooth.Editor.Animation
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = paramName,
+                blendParameter = binaryProxyPrefix + paramName,
                 name = "OSCm_Input",
                 useAutomaticThresholds = false
             };
@@ -484,62 +485,79 @@ namespace OSCmooth.Editor.Animation
             return rootTree;
         }
 
-        public BlendTree CreateBinaryBlendTree(string paramName, int binarySizeSelection, bool combinedParameter)
+        public BlendTree CreateBinaryDecoder(string paramName, int binarySizeSelection, bool combinedParameter)
         {
-            // Create each binary step decode layer. Expression Parameters are bools and are implicitly cast as floats in the animator.
-            // This creates one monolithic animation layer with all of the binary conversion logic.
+            string _prefix = "OSCm/Binary/";
 
-            string prefix = "OSCm/Binary/";
-
-            var blendRootPara = "OSCm/BlendSet";
+            var _rootParameter = "OSCm/BlendSet";
             if (combinedParameter)
             {
-                _animatorController.CreateParameter(_existingParameters, prefix + paramName + "Negative", AnimatorControllerParameterType.Float, true);
-                blendRootPara = prefix + paramName + "Negative";
+                _animatorController.CreateParameter(_existingParameters, _prefix + paramName + "Negative", AnimatorControllerParameterType.Float, true);
+                _rootParameter = _prefix + paramName + "Negative";
             }
 
-            BlendTree decodeBinaryRoot = new BlendTree
+            BlendTree _decodeBinaryRoot = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = blendRootPara,
+                blendParameter = _rootParameter,
                 name = "OSCm_Binary_" + paramName + "_Root",
                 useAutomaticThresholds = false
             };
 
-            // Go through binary steps and create each child to eventually stuff into the Direct BlendTrees.
-            for (int sign = combinedParameter ? -1 : 1; sign <= 1; sign += 2)
+            BlendTree _decodeBinaryPositiveTree = new BlendTree
             {
-                BlendTree decodeBinaryChildTree = new BlendTree
+                blendType = BlendTreeType.Direct,
+                hideFlags = HideFlags.HideInHierarchy,
+                name = "Binary_" + paramName + "_Positive",
+                useAutomaticThresholds = false
+            };
+
+            // Go through binary steps and create each child to eventually stuff into the Direct BlendTrees.
+            List<ChildMotion> childBinaryPositiveDecode = new List<ChildMotion>();
+            for (int i = 0; i < binarySizeSelection; i++)
+            {
+                var decodeBinaryPositive = CreateBinaryDecodeTree(paramName, _binaryExportDirectory, i, binarySizeSelection, false);
+
+                childBinaryPositiveDecode.Add(new ChildMotion
+                {
+                    directBlendParameter = "OSCm/BlendSet",
+                    motion = decodeBinaryPositive,
+                    timeScale = 1
+                });
+            }
+            _decodeBinaryPositiveTree.children = childBinaryPositiveDecode.ToArray();
+            _decodeBinaryRoot.AddChild(_decodeBinaryPositiveTree, 0f);
+
+            if (combinedParameter)
+            {
+                BlendTree _decodeBinaryNegativeTree = new BlendTree
                 {
                     blendType = BlendTreeType.Direct,
                     hideFlags = HideFlags.HideInHierarchy,
-                    name = "OSCm_Binary_ + " + paramName + "_" + (sign < 0 ? "Negative" : "Positive") + "_" + _animatorGUID,
+                    name = "Binary_" + paramName + "_Negative",
                     useAutomaticThresholds = false
                 };
 
-                List<ChildMotion> childBinaryDecode = new List<ChildMotion>();
-
+                List<ChildMotion> childBinaryNegativeDecode = new List<ChildMotion>();
                 for (int i = 0; i < binarySizeSelection; i++)
                 {
-                    var decodeBinaryPositive = CreateBinaryDecode(paramName, _binaryExportDirectory, i, binarySizeSelection, sign <= 0);
+                    var decodeBinaryNegative = CreateBinaryDecodeTree(paramName, _binaryExportDirectory, i, binarySizeSelection, true);
 
-                    childBinaryDecode.Add(new ChildMotion
+                    childBinaryNegativeDecode.Add(new ChildMotion
                     {
                         directBlendParameter = "OSCm/BlendSet",
-                        motion = decodeBinaryPositive,
+                        motion = decodeBinaryNegative,
                         timeScale = 1
                     });
                 }
-
-                decodeBinaryChildTree.children = childBinaryDecode.ToArray();
-                decodeBinaryRoot.AddChild(decodeBinaryChildTree, sign >= 0 ? 0f : 1f);
-                AssetDatabase.AddObjectToAsset(decodeBinaryChildTree, _animatorPath);
+                _decodeBinaryNegativeTree.children = childBinaryNegativeDecode.ToArray();
+                AssetDatabase.AddObjectToAsset(_decodeBinaryNegativeTree, _animatorPath);
+                _decodeBinaryRoot.AddChild(_decodeBinaryNegativeTree, 1f);
             }
 
-            AssetDatabase.AddObjectToAsset(decodeBinaryRoot, _animatorPath);
-
-            return decodeBinaryRoot;
+            AssetDatabase.AddObjectToAsset(_decodeBinaryRoot, _animatorPath);
+            return _decodeBinaryRoot;
         }
 
         public AnimationClip FindOrCreateAnimationClip(string directory, string paramName, AnimationCurve curve)
@@ -567,7 +585,7 @@ namespace OSCmooth.Editor.Animation
             return clip;
         }
 
-        public AnimationClip[] CreateBinaryAnimation(string paramName, string directory, float weight, int step)
+        public AnimationClip[] CreateBinaryDecodeAnimation(string paramName, string directory, float weight, int step)
         {
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
@@ -581,23 +599,24 @@ namespace OSCmooth.Editor.Animation
             return new AnimationClip[] { _trueClip, _falseClip };
         }
 
-        public BlendTree CreateBinaryDecode(string paramName, string directory, int binaryPow, int binarySize, bool negative)
+        public BlendTree CreateBinaryDecodeTree(string paramName, string directory, int binaryPow, int binarySize, bool negative)
         {
             string prefix = "OSCm/Binary/";
+            var binaryProxyPrefix = "OSCm/Binary/Proxy/";
             float binaryPowValue = Mathf.Pow(2, binaryPow);
-            _animatorController.CreateParameter(_existingParameters, prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float, false);
+            _animatorController.CreateParameter(_existingParameters, prefix + paramName + binaryPowValue, AnimatorControllerParameterType.Float, true);
 
             BlendTree decodeBinary = new BlendTree
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
                 blendParameter = prefix + paramName + (int)binaryPowValue,
-                name = "Binary_" + paramName + "_Decode_" + binaryPowValue,
+                name = $"Binary_{paramName}_Decode_{(negative ? "Negative_" : "")}{binaryPowValue}",
                 useAutomaticThresholds = false
             };
 
             // Create Decode anims and weight per binary
-            AnimationClip[] decodeAnims = CreateBinaryAnimation(paramName, directory, (negative ? -1f : 1f) * binaryPowValue / (Mathf.Pow(2, binarySize) - 1f), binaryPow);
+            AnimationClip[] decodeAnims = CreateBinaryDecodeAnimation(binaryProxyPrefix + paramName, directory, (negative ? -1f : 1f) * binaryPowValue / (Mathf.Pow(2, binarySize) - 1f), binaryPow);
             decodeBinary.AddChild(decodeAnims[0], 0f);
             decodeBinary.AddChild(decodeAnims[1], 1f);
 

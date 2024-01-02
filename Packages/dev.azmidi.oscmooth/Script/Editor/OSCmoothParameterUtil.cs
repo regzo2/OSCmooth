@@ -7,7 +7,7 @@ using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using UnityEditor.Animations;
 using OSCmooth.Types;
-using static OSCmooth.Filters;
+using static OSCmooth.OSCmNameManager;
 
 namespace OSCmooth.Util
 {
@@ -47,6 +47,7 @@ namespace OSCmooth.Util
             }
 
             var _vrcParameters = avatarDescriptor.expressionParameters.parameters.ToList();
+            var _nameParser = new OSCmNameManager(!setup.useBinaryEncoding);
 
             foreach (OSCmoothParameter oscmParam in _oscmParameters)
             {
@@ -54,29 +55,30 @@ namespace OSCmooth.Util
 
                 if (oscmParam.binarySizeSelection != 0 && oscmParam.binarySizeSelection <= 7)
                 {
-                    if (_vrcParameterMatch.name == oscmParam.paramName)
+                    if (_vrcParameterMatch != null && _vrcParameterMatch.name == oscmParam.paramName)
                         _vrcParameters.Remove(_vrcParameterMatch);
-                    if (isEncoding)
+                    if (oscmParam.binaryEncoding)
                         AddParameter(oscmParam.paramName,
                                      VRCExpressionParameters.ValueType.Float,
                                      false);
 
 
-                    var binaryName = $"{oscmPrefix}{binaryPrefix}{oscmParam.paramName}";
                     for (int binarySize = 0; binarySize < oscmParam.binarySizeSelection; binarySize++)
                     {
-                        AddParameter(Obfuscate($"{binaryName}{1 << binarySize}"),
+                        var binaryParameter = _nameParser.Binary(oscmParam.paramName, 1 << binarySize);
+                        AddParameter(binaryParameter,
                                      VRCExpressionParameters.ValueType.Bool,
                                      true);
                     }
                     if (oscmParam.binaryNegative)
                     {
-                        AddParameter(Obfuscate($"{binaryName}Negative"),
+                        var binaryNegative = _nameParser.BinaryNegative(oscmParam.paramName);
+                        AddParameter(binaryNegative,
                                      VRCExpressionParameters.ValueType.Bool,
                                      true);
                     }
                 }
-                else if (_vrcParameterMatch.name == oscmParam.paramName)
+                else if (_vrcParameterMatch != null && _vrcParameterMatch.name == oscmParam.paramName)
                     continue;
                 else
                     AddParameter(oscmParam.paramName, 
@@ -128,42 +130,14 @@ namespace OSCmooth.Util
         }
 
         private static HashSet<string> existingParameterNames;
-
-        public static string Obfuscate(string name)
-        {
-            // Simple Ceasar cypher.
-            var shift = 16;
-            var maxChar = Convert.ToInt32(char.MaxValue);
-            var minChar = Convert.ToInt32(char.MinValue);
-
-            var buffer = name.ToCharArray();
-            for (var i = 0; i < buffer.Length; i++)
-            {
-                var shifted = Convert.ToInt32(buffer[i]) + shift;
-
-                if (shifted > maxChar)
-                {
-                    shifted -= maxChar;
-                }
-                else if (shifted < minChar)
-                {
-                    shifted += maxChar;
-                }
-                buffer[i] = Convert.ToChar(shifted);
-            }
-
-            return new string(buffer);
-        }
-
         public static AnimatorControllerParameter CreateParameter(this AnimatorController animatorController,
                                                                   HashSet<string> existingParameterNames,                                            
                                                                   string paramName, 
                                                                   AnimatorControllerParameterType type, 
                                                                   bool checkForExisting,
-                                                                  bool obfuscate,
                                                                   float defaultVal = 0f)
         {
-            var _paramName = obfuscate ? Obfuscate(paramName) : paramName;
+            var _paramName = paramName;
             if (checkForExisting)
             {
                 if (existingParameterNames.Contains(_paramName))

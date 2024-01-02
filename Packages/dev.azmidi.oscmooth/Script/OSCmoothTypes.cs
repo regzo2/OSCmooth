@@ -11,6 +11,8 @@ namespace OSCmooth.Types
     {
         public List<OSCmoothParameter> parameters = new List<OSCmoothParameter>();
         public OSCmoothParameter configParam = new OSCmoothParameter();
+        public bool useBinaryEncoding = true;
+        public bool useBinaryDecoding = true;
     }
 
     [Serializable]

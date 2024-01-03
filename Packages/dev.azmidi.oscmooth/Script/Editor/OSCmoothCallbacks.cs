@@ -59,7 +59,6 @@ namespace OSCmooth.Editor
 			System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
 			ApplyParameters(_avatarDescriptor, _oscm);
 			ApplyAnimationLayers(_avatarDescriptor, _oscm);
-			ApplyAnimationLayers(_avatarDescriptor, _oscm);
 			AssetDatabase.SaveAssets();
 			watch.Stop();
 			Debug.Log($"Time OSCmooth took to generate: {watch.ElapsedMilliseconds} ms");
@@ -102,20 +101,7 @@ namespace OSCmooth.Editor
 					oscm.setup.useBinaryEncoding,
 					false
 				)
-				.CreateLayer();
-
-				if (i == layers.Length-1)
-					new OSCmoothAnimationHandler
-					(
-						oscm.setup.parameters,
-						_layerProxyController,
-						_directory + $"Generated/Smooth/Animator_{_proxyGUID}/",
-						_directory + $"Generated/Binary/Animator_{_proxyGUID}/",
-						oscm.setup.useBinaryEncoding,
-						false
-					)
-					.CreateEncoders();
-
+				.CreateLayer(i == layers.Length-1);
 
 				layers[i].animatorController = _layerProxyController;
 			}

@@ -53,7 +53,7 @@ namespace OSCmooth.Util
             {
                 var _vrcParameterMatch = _vrcParameters.FirstOrDefault(p => p.name == oscmParam.paramName);
 
-                if (oscmParam.binarySizeSelection != 0 && oscmParam.binarySizeSelection <= 7)
+                if (oscmParam.binarySizeSelection > 0 && oscmParam.binarySizeSelection <= 7)
                 {
                     if (_vrcParameterMatch != null && _vrcParameterMatch.name == oscmParam.paramName)
                         _vrcParameters.Remove(_vrcParameterMatch);

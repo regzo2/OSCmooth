@@ -17,11 +17,14 @@ using System.Reflection;
 using VRC.SDKBase;
 using System;
 using Object = UnityEngine.Object;
+using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
 
 namespace OSCmooth.Editor.Animation
 {
     public class OSCmoothAnimationHandler
     {
+        private OSCmoothSetup _setup;
+        private CustomAnimLayer[] _layers;
         private AnimatorController _animatorController;
         private string _animatorPath;
         private string _animatorGUID;
@@ -29,34 +32,19 @@ namespace OSCmooth.Editor.Animation
         private OSCmNameManager _nameParser;
 
         private List<OSCmoothParameter> _parameters;
-        private string _smoothExportDirectory;
-        private string _binaryExportDirectory;
+        private string _exportDirectory;
         private bool _saveAssetsToFiles;
         private bool _useEncoding;
         private HashSet<string> _existingParameters;
         private Dictionary<string, string> parameterRenameBatch = new Dictionary<string, string>();
 
-        public OSCmoothAnimationHandler(List<OSCmoothParameter> parameters,
-                                        AnimatorController animatorController, 
-                                        string smoothExportDirectory,
-                                        string binaryExportDirectory,
-                                        bool useEncoding = false,
+        public OSCmoothAnimationHandler(OSCmoothSetup setup,
+                                        CustomAnimLayer[] layers,
                                         bool saveAssetsToFiles = true)
         {
-            _animatorController = animatorController;
-            _animatorPath = AssetDatabase.GetAssetPath(_animatorController);
-            _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath)
-                                           .Where(a => a != null && (a.GetType() == typeof(AnimatorState) || a.GetType() == typeof(BlendTree)))
-                                           .ToList();
-            Debug.Log($"Loaded {_animatorAssets.Count} assets in animator");
-            _animatorGUID = AssetDatabase.AssetPathToGUID(_animatorPath);
-            _parameters = parameters;
-            _smoothExportDirectory = smoothExportDirectory;
-            _binaryExportDirectory = binaryExportDirectory;
+            _setup = setup;
+            _layers = layers;
             _saveAssetsToFiles = saveAssetsToFiles;
-            _existingParameters = new HashSet<string>(animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
-            _useEncoding = useEncoding;
-            _nameParser = new OSCmNameManager(!useEncoding);
         }
 
         public void RemoveAllOSCmoothFromController()
@@ -71,7 +59,7 @@ namespace OSCmooth.Editor.Animation
         {
             var _localBehaviors = new List<StateMachineBehaviour>();
             var _remoteBehaviors = new List<StateMachineBehaviour>();   
-            foreach (var p in _parameters.Where(pa => pa.binaryEncoding))
+            foreach (var p in _setup.parameters.Where(pa => pa.binaryEncoding))
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Encoder Layers", 0.0f);
 
@@ -102,6 +90,44 @@ namespace OSCmooth.Editor.Animation
             local.behaviours = _localBehaviors.ToArray();
             remote.behaviours = _remoteBehaviors.ToArray();
             EditorUtility.ClearProgressBar();
+        }
+
+        public void CreateLayers()
+        {
+            for (int i = 0; i < _layers.Length; i++)
+			{
+				if (_layers[i].animatorController == null)
+					continue;
+
+				string _baseAnimatorPath = AssetDatabase.GetAssetPath(_layers[i].animatorController);
+				AnimLayerType _type = _layers[i].type;
+				_parameters = _setup.parameters.Where(p => Extensions.Contains(p.layerMask, _type)).ToList();
+
+				string _directory = $"Assets/OSCmooth/Temp/";
+				if (!Directory.Exists(_directory))
+				{
+					Directory.CreateDirectory(_directory);
+					Debug.Log("Directory created: " + _directory);
+				}
+
+				_animatorPath = $"{_directory}{_layers[i].animatorController.name}Proxy.controller";
+
+				if (!AssetDatabase.CopyAsset(_baseAnimatorPath, _animatorPath)) continue;
+				AssetDatabase.SaveAssets();
+
+				_animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(_animatorPath);
+				_animatorGUID = AssetDatabase.AssetPathToGUID(_animatorPath);
+                _animatorAssets = AssetDatabase.LoadAllAssetsAtPath(_animatorPath)
+                                           .Where(a => a != null && (a.GetType() == typeof(AnimatorState) || a.GetType() == typeof(BlendTree)))
+                                           .ToList();
+                _existingParameters = new HashSet<string>(_animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
+                _exportDirectory = $"{_directory}/Animator_{_animatorGUID}/";
+                _nameParser = new OSCmNameManager(!_setup.useBinaryEncoding);
+
+				CreateLayer(i == _layers.Length-1);
+
+				_layers[i].animatorController = _animatorController;
+			}
         }
 
         public void CreateLayer(bool createEncoders = false)
@@ -224,7 +250,7 @@ namespace OSCmooth.Editor.Animation
                 _curveZero.AddKey(0f, p.binaryNegative ? -1f : 0f);
                 _driveChilds.Add(new ChildMotion
                 {
-                    motion = FindOrCreateAnimationClip(_smoothExportDirectory, _nameParser.BinaryProxy(p.paramName), _curveZero),
+                    motion = FindOrCreateAnimationClip(_exportDirectory, _nameParser.BinaryDriver(p.paramName), _curveZero),
                     threshold = p.binaryNegative ? -1f : 0f,
                     timeScale = 1f,
                 });
@@ -233,7 +259,7 @@ namespace OSCmooth.Editor.Animation
                 _curveOne.AddKey(0f, 1f);
                 _driveChilds.Add(new ChildMotion
                 {
-                    motion = FindOrCreateAnimationClip(_smoothExportDirectory, _nameParser.BinaryProxy(p.paramName), _curveOne),
+                    motion = FindOrCreateAnimationClip(_exportDirectory, _nameParser.BinaryDriver(p.paramName), _curveOne),
                     threshold = 1f,
                     timeScale= 1f,
                 });
@@ -312,8 +338,8 @@ namespace OSCmooth.Editor.Animation
                     parameterRenameBatch.Add(p.paramName, _nameParser.Proxy(p.paramName));
                 }
 
-                var motionLocal = CreateParameterSmoothingBlendTree(p.localSmoothness, p.paramName, false);
-                var motionRemote = CreateParameterSmoothingBlendTree(p.remoteSmoothness, p.paramName, true);
+                var motionLocal = CreateParameterSmoothingBlendTree(p.localSmoothness, p, false);
+                var motionRemote = CreateParameterSmoothingBlendTree(p.remoteSmoothness, p, true);
 
                 localChildMotions.Add(new ChildMotion
                 {
@@ -361,7 +387,7 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CreateParameter(_existingParameters, "OSCm/BlendSet", AnimatorControllerParameterType.Float, false, 1f);
+            _animatorController.CreateParameter(_existingParameters, _nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
 
             var childBinary = new List<ChildMotion>();
 
@@ -663,16 +689,17 @@ namespace OSCmooth.Editor.Animation
         }
 
         public BlendTree CreateParameterSmoothingBlendTree(float smoothness,
-                                                           string paramName,
+                                                           OSCmoothParameter parameter,
                                                            bool remote)
         {
+            var paramName = parameter.paramName;
             var _smoother = _nameParser.Smoother(paramName, remote);
-            var _binaryProxy = _nameParser.BinaryProxy(paramName);
+            var _driverProxy = parameter.binarySizeSelection > 0 ? _nameParser.BinaryDriver(paramName) : paramName;
             var _proxy = _nameParser.Proxy(paramName);
 
             _animatorController.CreateParameter(_existingParameters, _smoother, AnimatorControllerParameterType.Float, false, smoothness);
             _animatorController.CreateParameter(_existingParameters, _proxy, AnimatorControllerParameterType.Float, false);
-            _animatorController.CreateParameter(_existingParameters, _binaryProxy, AnimatorControllerParameterType.Float, false);
+            _animatorController.CreateParameter(_existingParameters, _driverProxy, AnimatorControllerParameterType.Float, false);
 
             // Creating 3 blend trees to create the feedback loop
             BlendTree rootTree = new BlendTree
@@ -687,7 +714,7 @@ namespace OSCmooth.Editor.Animation
             {
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
-                blendParameter = _binaryProxy,
+                blendParameter = _driverProxy,
                 name = "OSCm_Input",
                 useAutomaticThresholds = false
             };
@@ -701,7 +728,7 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Create smoothing anims
-            AnimationClip[] driverAnims = CreateFloatSmootherAnimation(_proxy, _smoothExportDirectory);
+            AnimationClip[] driverAnims = CreateFloatSmootherAnimation(_proxy, _exportDirectory);
 
             rootTree.AddChild(falseTree, 0f);
             rootTree.AddChild(trueTree, 1f);
@@ -752,7 +779,7 @@ namespace OSCmooth.Editor.Animation
             List<ChildMotion> childBinaryPositiveDecode = new List<ChildMotion>();
             for (int i = 0; i < binarySizeSelection; i++)
             {
-                var decodeBinaryPositive = CreateBinaryDecodeTree(paramName, _binaryExportDirectory, i, binarySizeSelection, false);
+                var decodeBinaryPositive = CreateBinaryDecodeTree(paramName, _exportDirectory, i, binarySizeSelection, false);
 
                 childBinaryPositiveDecode.Add(new ChildMotion
                 {
@@ -778,7 +805,7 @@ namespace OSCmooth.Editor.Animation
                 List<ChildMotion> childBinaryNegativeDecode = new List<ChildMotion>();
                 for (int i = 0; i < binarySizeSelection; i++)
                 {
-                    var decodeBinaryNegative = CreateBinaryDecodeTree(paramName, _binaryExportDirectory, i, binarySizeSelection, true);
+                    var decodeBinaryNegative = CreateBinaryDecodeTree(paramName, _exportDirectory, i, binarySizeSelection, true);
 
                     childBinaryNegativeDecode.Add(new ChildMotion
                     {
@@ -839,7 +866,7 @@ namespace OSCmooth.Editor.Animation
         {
             float binaryPowValue = Mathf.Pow(2, binaryPow);
             var binaryParameter = _nameParser.Binary(paramName, (int)binaryPowValue);
-            var binaryProxy = _nameParser.BinaryProxy(paramName);
+            var binaryProxy = _nameParser.BinaryDriver(paramName);
 
             _animatorController.CreateParameter(_existingParameters, binaryParameter, AnimatorControllerParameterType.Float, true);
 

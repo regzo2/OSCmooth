@@ -98,10 +98,9 @@ public class OSCmoothBehaviorEditor : Editor
                     if (_animatorController == null) continue;
                     new OSCmoothAnimationHandler
                     (
-                        _setup.parameters,
-                        _animatorController,
-                        "",
-                        "")
+                        _setup,
+                        new VRCAvatarDescriptor.CustomAnimLayer[0]
+                    )
                     .RemoveAllOSCmoothFromController();
                 }
                 AssetDatabase.SaveAssets();

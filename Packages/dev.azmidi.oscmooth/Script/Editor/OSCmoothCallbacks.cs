@@ -69,42 +69,15 @@ namespace OSCmooth.Editor
 		public static void ApplyAnimationLayers(VRCAvatarDescriptor avatarDescriptor, OSCmoothBehavior oscm)
 		{
 			CustomAnimLayer[] layers = avatarDescriptor.baseAnimationLayers;
-			for (int i = 0; i < layers.Length; i++)
-			{
-				if (layers[i].animatorController == null)
-					continue;
 
-				string _animatorPath = AssetDatabase.GetAssetPath(layers[i].animatorController);
-				AnimLayerType _type = layers[i].type;
-				List<OSCmoothParameter> _layerParameters = oscm.setup.parameters
-					.Where(p => Extensions.Contains(p.layerMask, _type)).ToList();
+			new OSCmoothAnimationHandler
+			(
+				oscm.setup,
+				layers,
+				false
+			)
+			.CreateLayers();
 
-				string _directory = $"Assets/OSCmooth/Temp/{oscm.gameObject.name}/";
-				if (!Directory.Exists(_directory))
-				{
-					Directory.CreateDirectory(_directory);
-					Debug.Log("Directory created: " + _directory);
-				}
-
-				string _proxyPath = $"{_directory}{layers[i].animatorController.name}Proxy.controller";
-				if (!AssetDatabase.CopyAsset(_animatorPath, _proxyPath)) continue;
-
-				AssetDatabase.SaveAssets();
-				AnimatorController _layerProxyController = AssetDatabase.LoadAssetAtPath<AnimatorController>(_proxyPath);
-				string _proxyGUID = AssetDatabase.AssetPathToGUID(_proxyPath);
-				new OSCmoothAnimationHandler
-				(
-					_layerParameters,
-					_layerProxyController,
-					_directory + $"Generated/Smooth/Animator_{_proxyGUID}/",
-					_directory + $"Generated/Binary/Animator_{_proxyGUID}/",
-					oscm.setup.useBinaryEncoding,
-					false
-				)
-				.CreateLayer(i == layers.Length-1);
-
-				layers[i].animatorController = _layerProxyController;
-			}
 			avatarDescriptor.baseAnimationLayers = layers;
 		}
 

@@ -51,7 +51,7 @@ namespace OSCmooth
             _legacy
             ? $"{oscmPrefix}{binaryPrefix}{parameter}{binaryNegativeSuffix}"
             : $"{oscmPrefix}{binaryPrefix}{binaryNegativeSuffix}/{Shuffle(parameter)}";
-        public string BinaryProxy(string parameter) =>
+        public string BinaryDriver(string parameter) =>
             $"{oscmPrefix}{binaryPrefix}{proxyPrefix}{parameter}";
         public string Proxy(string parameter) =>
             $"{oscmPrefix}{proxyPrefix}{parameter}";

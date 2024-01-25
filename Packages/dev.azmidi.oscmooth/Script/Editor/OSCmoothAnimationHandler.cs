@@ -36,7 +36,7 @@ namespace OSCmooth.Editor.Animation
         private bool _saveAssetsToFiles;
         private bool _useEncoding;
         private HashSet<string> _existingParameters;
-        private Dictionary<string, string> parameterRenameBatch = new Dictionary<string, string>();
+        private Dictionary<string, string> _parameterRenameBatch = new Dictionary<string, string>();
 
         public OSCmoothAnimationHandler(OSCmoothSetup setup,
                                         CustomAnimLayer[] layers,
@@ -53,6 +53,12 @@ namespace OSCmooth.Editor.Animation
             RevertStateMachineParameters();
             RemoveExtendedParametersInController("OSCm");
             RemoveContainingLayersInController("OSCm");
+        }
+
+        public void RenameParameterBatch(string from, string to)
+        {
+            if(!_parameterRenameBatch.TryGetValue(from, out string _))
+                _parameterRenameBatch.Add(from, to);
         }
 
         public void CreateEncoders(AnimatorState local, AnimatorState remote)
@@ -335,7 +341,7 @@ namespace OSCmooth.Editor.Animation
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Smoothing Direct BlendTree", (float)i++/_parameters.Count);
                 if (p.convertToProxy)
                 {
-                    parameterRenameBatch.Add(p.paramName, _nameParser.Proxy(p.paramName));
+                    RenameParameterBatch(p.paramName, _nameParser.Proxy(p.paramName));
                 }
 
                 var motionLocal = CreateParameterSmoothingBlendTree(p.localSmoothness, p, false);
@@ -452,32 +458,32 @@ namespace OSCmooth.Editor.Animation
                 switch (asset)
                 {
                     case BlendTree blendTree:
-                        if (parameterRenameBatch.TryGetValue(blendTree.blendParameter, out string _newBlend))
+                        if (_parameterRenameBatch.TryGetValue(blendTree.blendParameter, out string _newBlend))
                             blendTree.blendParameter = _newBlend;
 
-                        if (parameterRenameBatch.TryGetValue(blendTree.blendParameterY, out string _newBlendY))
+                        if (_parameterRenameBatch.TryGetValue(blendTree.blendParameterY, out string _newBlendY))
                             blendTree.blendParameterY = _newBlendY;
 
                         var _children = blendTree.children;
                         for (int i = 0; i < blendTree.children.Length; i++)
                         {
-                            if (parameterRenameBatch.TryGetValue(_children[i].directBlendParameter, out string _newDirectParameter))
+                            if (_parameterRenameBatch.TryGetValue(_children[i].directBlendParameter, out string _newDirectParameter))
                                 _children[i].directBlendParameter = _newDirectParameter;
                         }
                         blendTree.children = _children;
                         break;
 
                     case AnimatorState animatorState:
-                        if (parameterRenameBatch.TryGetValue(animatorState.timeParameter, out string _newTime))
+                        if (_parameterRenameBatch.TryGetValue(animatorState.timeParameter, out string _newTime))
                             animatorState.timeParameter = _newTime;
 
-                        if (parameterRenameBatch.TryGetValue(animatorState.speedParameter, out string _newSpeed))
+                        if (_parameterRenameBatch.TryGetValue(animatorState.speedParameter, out string _newSpeed))
                             animatorState.speedParameter = _newSpeed;
 
-                        if (parameterRenameBatch.TryGetValue(animatorState.cycleOffsetParameter, out string _newOffset))
+                        if (_parameterRenameBatch.TryGetValue(animatorState.cycleOffsetParameter, out string _newOffset))
                             animatorState.cycleOffsetParameter = _newOffset;
 
-                        if (parameterRenameBatch.TryGetValue(animatorState.mirrorParameter,out string _newMirror))
+                        if (_parameterRenameBatch.TryGetValue(animatorState.mirrorParameter,out string _newMirror))
                             animatorState.mirrorParameter = _newMirror;
                         break;
                 }
@@ -532,7 +538,7 @@ namespace OSCmooth.Editor.Animation
                 {
                     if (stateParam.Contains(oscmParam))
                     {
-                        parameterRenameBatch.Add(stateParam, stateParam.Replace(oscmParam, ""));
+                        RenameParameterBatch(stateParam, stateParam.Replace(oscmParam, ""));
                     }
                 }
             }

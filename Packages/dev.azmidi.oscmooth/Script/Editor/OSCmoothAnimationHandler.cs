@@ -57,7 +57,7 @@ namespace OSCmooth.Editor.Animation
 
         public void RenameParameterBatch(string from, string to)
         {
-            if(!_parameterRenameBatch.TryGetValue(from, out string _))
+            if(!_parameterRenameBatch.ContainsKey(from))
                 _parameterRenameBatch.Add(from, to);
         }
 

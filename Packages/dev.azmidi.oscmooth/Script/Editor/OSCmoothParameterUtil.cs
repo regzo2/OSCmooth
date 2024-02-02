@@ -93,6 +93,8 @@ namespace OSCmooth.Util
             _proxyExpressions.parameters = BakeAndClearParameters(_vrcParameters);
 
             avatarDescriptor.expressionParameters = _proxyExpressions;
+            
+            EditorUtility.SetDirty(_proxyExpressions);
             AssetDatabase.SaveAssets();
             return true;
         }

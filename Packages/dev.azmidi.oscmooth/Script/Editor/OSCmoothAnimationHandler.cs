@@ -140,9 +140,7 @@ namespace OSCmooth.Editor.Animation
         {
             AssetDatabase.StartAssetEditing();
 
-            AnimatorControllerParameter _isLocal;
-            if (!_animatorController.FindParameter(_existingParameters, "IsLocal", out _isLocal))
-                _isLocal = _animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Bool, false);
+            AnimatorControllerParameter _isLocal = _animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Bool, true);
 
             AnimatorControllerLayer animLayer = CreateAnimLayerInController("_OSCmooth_Gen");
             var _localState = animLayer.stateMachine.AddState("OSCmooth_Local", new Vector3(30, 170, 0));

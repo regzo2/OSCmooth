@@ -1,0 +1,20 @@
+{
+  "name": "dev.azmidi.oscmooth",
+  "version": "2.0.0",
+  "displayName": "OSCmooth",
+  "description": "Tool for easily adding interpolation to VRChat Expression Parameters",
+  "unity": "2019.4",
+  "documentationUrl": "https://github.com/regzo2/OSCmooth",
+  "changelogUrl": "https://github.com/regzo2/OSCmooth/releases",
+  "licensesUrl": "https://github.com/regzo2/OSCmooth/blob/master/LICENSE",
+  "keywords": [
+    "oscmooth",
+    "vrchat",
+    "tool"
+  ],
+  "author": {
+    "name": "Mitchell Taylor",
+    "email": "regzo252@gmail.com",
+    "url": "https://github.com/regzo2"
+  }
+}

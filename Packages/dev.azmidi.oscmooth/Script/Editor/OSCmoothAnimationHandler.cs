@@ -57,7 +57,7 @@ namespace OSCmooth.Editor.Animation
 
         public void RenameParameterBatch(string from, string to)
         {
-            if(!_parameterRenameBatch.TryGetValue(from, out string _))
+            if(!_parameterRenameBatch.ContainsKey(from))
                 _parameterRenameBatch.Add(from, to);
         }
 
@@ -141,7 +141,7 @@ namespace OSCmooth.Editor.Animation
             AssetDatabase.StartAssetEditing();
 
             //_animatorController.CreateParameter(_existingParameters, "IsLocal", AnimatorControllerParameterType.Float, false);
-            EnsureParameterExists("IsLocal", AnimatorControllerParameterType.Float, false);
+            EnsureParameterExists("IsLocal", AnimatorControllerParameterType.Bool, false);
 
             AnimatorControllerLayer animLayer = CreateAnimLayerInController("_OSCmooth_Gen");
             var _localState = animLayer.stateMachine.AddState("OSCmooth_Local", new Vector3(30, 170, 0));
@@ -207,14 +207,25 @@ namespace OSCmooth.Editor.Animation
             var _toLocal = _remoteState.AddTransition(_localState);
             var _toRemote = _localState.AddTransition(_remoteState);
 
-            _localEntry.AddCondition(AnimatorConditionMode.Greater, 0.5f, "IsLocal");
-            _toLocal.AddCondition(AnimatorConditionMode.Greater, 0.5f, "IsLocal");
             _toLocal.exitTime = 0f;
             _toLocal.duration = 0f;
-            _remoteEntry.AddCondition(AnimatorConditionMode.Less, 0.5f, "IsLocal");
-            _toRemote.AddCondition(AnimatorConditionMode.Less, 0.5f, "IsLocal");
             _toRemote.exitTime = 0f;
             _toRemote.duration = 0f;
+
+            if (_isLocal.type == AnimatorControllerParameterType.Bool)
+            {
+                _localEntry.AddCondition(AnimatorConditionMode.If, 0.5f, "IsLocal");
+                _toLocal.AddCondition(AnimatorConditionMode.If, 0.5f, "IsLocal");
+                _remoteEntry.AddCondition(AnimatorConditionMode.IfNot, 0.5f, "IsLocal");
+                _toRemote.AddCondition(AnimatorConditionMode.IfNot, 0.5f, "IsLocal");
+            }
+            else
+            {
+                _localEntry.AddCondition(AnimatorConditionMode.Greater, 0.5f, "IsLocal");
+                _toLocal.AddCondition(AnimatorConditionMode.Greater, 0.5f, "IsLocal");
+                _remoteEntry.AddCondition(AnimatorConditionMode.Less, 0.5f, "IsLocal");
+                _toRemote.AddCondition(AnimatorConditionMode.Less, 0.5f, "IsLocal");
+            }
 
             BatchRenameParameters();
 

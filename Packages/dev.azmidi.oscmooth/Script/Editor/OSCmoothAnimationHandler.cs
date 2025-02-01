@@ -250,8 +250,13 @@ namespace OSCmooth.Editor.Animation
             foreach (OSCmoothParameter p in _parameters.Where(oscmP => oscmP.binaryEncoding))
             {
                 Debug.Log($"Creating Parameter {p.paramName} Direct Drive.");
-                _animatorController.CreateParameter(_existingParameters, p.paramName, AnimatorControllerParameterType.Float, true);
-                _animatorController.CreateParameter(_existingParameters, _nameParser.Proxy(p.paramName), AnimatorControllerParameterType.Float, true);
+                //_animatorController.CreateParameter(_existingParameters, p.paramName, AnimatorControllerParameterType.Float, true);
+                //_animatorController.CreateParameter(_existingParameters, _nameParser.Proxy(p.paramName), AnimatorControllerParameterType.Float, true);
+
+                EnsureParameterExists(p.paramName, AnimatorControllerParameterType.Float, true);
+                EnsureParameterExists(_nameParser.Proxy(p.paramName), AnimatorControllerParameterType.Float, true);
+
+                
 
                 var _driveBlend = new BlendTree()
                 {
@@ -267,7 +272,7 @@ namespace OSCmooth.Editor.Animation
                 _curveZero.AddKey(0f, p.binaryNegative ? -1f : 0f);
                 _driveChilds.Add(new ChildMotion
                 {
-                    motion = FindOrCreateAnimationClip(_exportDirectory, _nameParser.BinaryDriver(p.paramName), _curveZero),
+                    motion = FindOrCreateAnimationClip(_exportDirectory, _nameParser.BinaryDriver(p.paramName), _curveZero, $"{p.paramName}_DirectDrive_0"),
                     threshold = p.binaryNegative ? -1f : 0f,
                     timeScale = 1f,
                 });
@@ -276,7 +281,7 @@ namespace OSCmooth.Editor.Animation
                 _curveOne.AddKey(0f, 1f);
                 _driveChilds.Add(new ChildMotion
                 {
-                    motion = FindOrCreateAnimationClip(_exportDirectory, _nameParser.BinaryDriver(p.paramName), _curveOne),
+                    motion = FindOrCreateAnimationClip(_exportDirectory, _nameParser.BinaryDriver(p.paramName), _curveOne,$"{p.paramName}_DirectDrive_1"),
                     threshold = 1f,
                     timeScale= 1f,
                 });
@@ -341,7 +346,10 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CreateParameter(_existingParameters, _nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
+            //_animatorController.CreateParameter(_existingParameters, _nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
+            EnsureParameterExists(_nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
+
+
 
             var localChildMotions = new List<ChildMotion>();
             var remoteChildMotions = new List<ChildMotion>();
@@ -404,7 +412,9 @@ namespace OSCmooth.Editor.Animation
             };
 
             // Creating a '1Set' parameter that holds a value of one at all times for the Direct BlendTree
-            _animatorController.CreateParameter(_existingParameters, _nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
+            //_animatorController.CreateParameter(_existingParameters, _nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
+            EnsureParameterExists(_nameParser.BlendSet(), AnimatorControllerParameterType.Float, false, 1f);
+
 
             var childBinary = new List<ChildMotion>();
 
@@ -621,7 +631,9 @@ namespace OSCmooth.Editor.Animation
         {
             var _layer = CreateAnimLayerInController($"_OSCm_{paramName}_Encode", 1f, false);
 
-            _animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true);
+            //_animatorController.CreateParameter(_existingParameters, paramName, AnimatorControllerParameterType.Float, true);
+            EnsureParameterExists(paramName, AnimatorControllerParameterType.Float, true);
+
 
             int binaryRes = (int)Mathf.Pow(2, binarySizeSelection);
             int binaryStates = binaryRes;
@@ -699,8 +711,8 @@ namespace OSCmooth.Editor.Animation
             var curvesInit = new AnimationCurve(new Keyframe(0.0f, initThreshold));
             var curvesFinal = new AnimationCurve(new Keyframe(0.0f, finalThreshold));
 
-            var _animationClipInit = FindOrCreateAnimationClip(initAssetPath, paramName, curvesInit);
-            var _animationClipFinal = FindOrCreateAnimationClip(finalAssetPath, paramName, curvesFinal);
+            var _animationClipInit = FindOrCreateAnimationClip(initAssetPath, paramName, curvesInit, $"{paramName}_Smoother_{initThreshold}");
+            var _animationClipFinal = FindOrCreateAnimationClip(finalAssetPath, paramName, curvesFinal, $"{paramName}_Smoother_{finalThreshold}");
 
             return new AnimationClip[] { _animationClipInit, _animationClipFinal };
         }
@@ -714,9 +726,13 @@ namespace OSCmooth.Editor.Animation
             var _driverProxy = parameter.binarySizeSelection > 0 ? _nameParser.BinaryDriver(paramName) : paramName;
             var _proxy = _nameParser.Proxy(paramName);
 
-            _animatorController.CreateParameter(_existingParameters, _smoother, AnimatorControllerParameterType.Float, false, smoothness);
-            _animatorController.CreateParameter(_existingParameters, _proxy, AnimatorControllerParameterType.Float, false);
-            _animatorController.CreateParameter(_existingParameters, _driverProxy, AnimatorControllerParameterType.Float, false);
+            //_animatorController.CreateParameter(_existingParameters, _smoother, AnimatorControllerParameterType.Float, false, smoothness);
+            //_animatorController.CreateParameter(_existingParameters, _proxy, AnimatorControllerParameterType.Float, false);
+            //_animatorController.CreateParameter(_existingParameters, _driverProxy, AnimatorControllerParameterType.Float, false);
+            EnsureParameterExists(_smoother, AnimatorControllerParameterType.Float, false, smoothness);
+            EnsureParameterExists(_proxy, AnimatorControllerParameterType.Float, false);
+            EnsureParameterExists(_driverProxy, AnimatorControllerParameterType.Float, false);
+
 
             // Creating 3 blend trees to create the feedback loop
             BlendTree rootTree = new BlendTree
@@ -771,7 +787,8 @@ namespace OSCmooth.Editor.Animation
             if (combinedParameter)
             {
                 var _binaryNegative = _nameParser.BinaryNegative(paramName);
-                _animatorController.CreateParameter(_existingParameters, _binaryNegative, AnimatorControllerParameterType.Float, true);
+                //_animatorController.CreateParameter(_existingParameters, _binaryNegative, AnimatorControllerParameterType.Float, true);
+                EnsureParameterExists(_binaryNegative, AnimatorControllerParameterType.Float, true);
                 _rootParameter = _binaryNegative;
             }
 
@@ -840,7 +857,7 @@ namespace OSCmooth.Editor.Animation
             return _decodeBinaryRoot;
         }
 
-        public AnimationClip FindOrCreateAnimationClip(string directory, string paramToDrive, AnimationCurve curve)
+        public AnimationClip FindOrCreateAnimationClip(string directory, string paramToDrive, AnimationCurve curve, string animName = "")
         {
             AnimationClip clip = null;
             if (!_saveAssetsToFiles)
@@ -859,8 +876,11 @@ namespace OSCmooth.Editor.Animation
                 }
                 else clip.ClearCurves();
             }
+            clip.name = animName;
 
+            Debug.Log("Choki - animName: " + animName);
             clip.SetCurve("", typeof(Animator), paramToDrive, curve);
+            Debug.Log("Choki - Created or loaded animation clip with name: " + clip.name);
     
             return clip;
         }
@@ -872,9 +892,11 @@ namespace OSCmooth.Editor.Animation
 
             var trueNamePath = directory + NameNoSymbol(paramName) + "_True_" + step.ToString() + weight + _animatorGUID + ".anim";
             var falseNamePath = directory + NameNoSymbol(paramName) + "_False_" + step.ToString() + weight + _animatorGUID + ".anim";
+            var trueAnimName = NameNoSymbol(paramName) + "_True_" + step.ToString() + weight;
+            var falseAnimName = NameNoSymbol(paramName) + "_False_" + step.ToString() + weight;
 
-            var _trueClip = FindOrCreateAnimationClip(trueNamePath, paramName, new AnimationCurve(new Keyframe(0.0f, 0.0f)));
-            var _falseClip = FindOrCreateAnimationClip(falseNamePath, paramName, new AnimationCurve(new Keyframe(0.0f, weight)));
+            var _trueClip = FindOrCreateAnimationClip(trueNamePath, paramName, new AnimationCurve(new Keyframe(0.0f, 0.0f)),trueAnimName);
+            var _falseClip = FindOrCreateAnimationClip(falseNamePath, paramName, new AnimationCurve(new Keyframe(0.0f, weight)),falseAnimName);
 
             return new AnimationClip[] { _trueClip, _falseClip };
         }
@@ -885,7 +907,9 @@ namespace OSCmooth.Editor.Animation
             var binaryParameter = _nameParser.Binary(paramName, (int)binaryPowValue);
             var binaryProxy = _nameParser.BinaryDriver(paramName);
 
-            _animatorController.CreateParameter(_existingParameters, binaryParameter, AnimatorControllerParameterType.Float, true);
+            //_animatorController.CreateParameter(_existingParameters, binaryParameter, AnimatorControllerParameterType.Float, true);
+            EnsureParameterExists(binaryParameter, AnimatorControllerParameterType.Float, true);
+            
 
             BlendTree decodeBinary = new BlendTree
             {
@@ -907,5 +931,35 @@ namespace OSCmooth.Editor.Animation
 
             return decodeBinary;
         }
+
+        private void EnsureParameterExists(string parameterName, AnimatorControllerParameterType type, bool defaultBool = false, float defaultFloat = 0f)
+        {
+            if (_existingParameters.Contains(parameterName))
+            {
+                Debug.Log($"Parameter '{parameterName}' already exists in the Animator Controller. Skipping creation.");
+                return;
+            }
+
+            AnimatorControllerParameter parameter = new AnimatorControllerParameter
+            {
+                name = parameterName,
+                type = type
+            };
+
+            if (type == AnimatorControllerParameterType.Float)
+            {
+                parameter.defaultFloat = defaultFloat;
+            }
+            else if (type == AnimatorControllerParameterType.Bool)
+            {
+                parameter.defaultBool = defaultBool;
+            }
+
+            _animatorController.AddParameter(parameter);
+            _existingParameters.Add(parameterName); // Add to the existing parameters list
+            Debug.Log($"Parameter '{parameterName}' added to Animator Controller.");
+        }
+
     }
 }
+

@@ -20,7 +20,9 @@ public class OSCmoothBehaviorEditor : Editor
     private int _oscmUsage;
     private bool _showGlobalConfiguration = false;
     private bool _settings;
+
     private bool _debugShow = true;
+    private bool _advancedSettings = false;
     private bool _debug;
 
     private readonly string[] binarySizeOptions = new string[8] 
@@ -86,6 +88,11 @@ public class OSCmoothBehaviorEditor : Editor
 
         if (_debug)
         {
+            _advancedSettings = EditorGUILayout.Toggle(
+                new GUIContent("Advanced Options", 
+                               "Enables more sophsticated options that are usually expoded for internal use."), 
+                               _advancedSettings);
+
             if (GUILayout.Button(
                 new GUIContent("Clean Baked OSCmooth from Avatar", 
                                "Removes older, manually setup OSCmooth animation setups from avatars. " +
@@ -136,7 +143,7 @@ public class OSCmoothBehaviorEditor : Editor
                                "Reverts OSCmooth setup from avatar. Requires"), 
                 Array.Empty<GUILayoutOption>()))
             {
-                new OSCmoothPostprocessor().OnPostprocessAvatar();
+                //new OSCmoothPostprocessor().OnPostprocessAvatar();
                 AssetDatabase.SaveAssets();
             }
         }
@@ -173,18 +180,19 @@ public class OSCmoothBehaviorEditor : Editor
                         existingParam.layerMask |= layerMask;
                         continue;
                     }
-                    OSCmoothParameter oscmParam = new OSCmoothParameter
-                    {
-                        paramName = parameter.name,
-                        layerMask = layerMask,
-                        binarySizeSelection = _setup.configParam.binarySizeSelection,
-                        binaryEncoding = _setup.useBinaryEncoding,
-                        localSmoothness = _setup.configParam.localSmoothness,
-                        remoteSmoothness = _setup.configParam.remoteSmoothness,
-                        binaryNegative = _setup.configParam.binaryNegative,
-                        convertToProxy = _setup.configParam.convertToProxy,
-                        isVisible = false
-                    };
+                    OSCmoothParameter oscmParam = new OSCmoothParameter();
+                    oscmParam.paramName = parameter.name;
+                    oscmParam.layerMask = layerMask;
+                    oscmParam.binarySizeSelection = _setup.configParam.binarySizeSelection;
+                    oscmParam.binaryEncoding = _setup.useBinaryEncoding ? _setup.configParam.binaryEncoding : OSCmoothParserType.None;
+                    oscmParam.localSmoothness = _setup.configParam.localSmoothness;
+                    oscmParam.remoteSmoothness = _setup.configParam.remoteSmoothness;
+                    oscmParam.binaryNegative = _setup.configParam.binaryNegative;
+                    if (_advancedSettings)
+                        oscmParam.convertToProxy = _setup.configParam.convertToProxy;
+                    else oscmParam.convertToProxy = true;
+                    oscmParam.isVisible = false;
+                    
                     _layerParameters.Add(oscmParam);
                 }
             }
@@ -292,10 +300,11 @@ public class OSCmoothBehaviorEditor : Editor
                            "Higher values represent more smoothness, and vice versa."), 
             remoteSmoothness);
 
-        convertToProxy = EditorGUILayout.Toggle(
-            new GUIContent("Proxy Conversion", 
-                           "Automatically convert existing animations to use the Proxy (output) float."), 
-            convertToProxy);
+        if (_advancedSettings)
+            convertToProxy = EditorGUILayout.Toggle(
+                new GUIContent("Proxy Conversion", 
+                               "Automatically convert existing animations to use the Proxy (output) float."), 
+                convertToProxy);
 
         layerMask = (AnimLayerTypeMask)EditorGUILayout.EnumFlagsField(
             new GUIContent("Playable Layers", 
@@ -313,13 +322,12 @@ public class OSCmoothBehaviorEditor : Editor
                 binarySizeOptions);
 
             if (_setup.useBinaryEncoding && binarySizeSelection > 0)
-                binaryEncoding = EditorGUILayout.Toggle(
+                binaryEncoding = (OSCmoothParserType)EditorGUILayout.EnumPopup(
                     new GUIContent("Binary Encoder",
-                                   "Should the binary encoding be done on the avatar itself?" +
-                                   "\n\nNOTE: This is expected to decrease performance locally. " +
-                                   "If your input (eg. by OSC driven parameters) is already binary encoded it " +
-                                   "is recommended to leave this disabled. This also only runs on the local user so " +
-                                   "remote users will not experience any performance degradation."),
+                                 "Method of encoding a locally driven float parameter to a synced Binary parameter" +
+                                 "\n\nNone: Does not generate a local float or encoding system. Directly drive the Binary parameters from OSC." +
+                                 "\n\nEncoder: Generates a float that locally drives parameters and an encoder system it drive it to synced Binary parameters. Drive the float parameter only." +
+                                 "\n\nMulti Driver: Generates a local float that locally drives parameters. Directly drive the float and associated Binary parameters from OSC."),
                     binaryEncoding);
 
             if (binarySizeSelection > 0)
@@ -334,11 +342,13 @@ public class OSCmoothBehaviorEditor : Editor
         {
             parameter.localSmoothness = localSmoothness;
             parameter.remoteSmoothness = remoteSmoothness;
-            parameter.convertToProxy = convertToProxy;
+            if (_advancedSettings)
+                parameter.convertToProxy = convertToProxy;
+            else parameter.convertToProxy = true;
             parameter.layerMask = layerMask;
             parameter.binarySizeSelection = (_setup.useBinaryDecoding ? binarySizeSelection : 0);
             parameter.binaryNegative = _setup.useBinaryDecoding && binaryNegative;
-            parameter.binaryEncoding = _setup.useBinaryEncoding && binaryEncoding;
+            parameter.binaryEncoding = _setup.useBinaryEncoding ? binaryEncoding : OSCmoothParserType.None;
         }
 
         EditorGUILayout.BeginHorizontal();

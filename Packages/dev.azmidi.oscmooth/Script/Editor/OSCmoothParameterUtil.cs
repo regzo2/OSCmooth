@@ -47,7 +47,7 @@ namespace OSCmooth.Util
             }
 
             var _vrcParameters = avatarDescriptor.expressionParameters.parameters.ToList();
-            var _nameParser = new OSCmNameManager(!setup.useBinaryEncoding);
+            var _nameParser = new OSCmNameManager();
 
             foreach (OSCmoothParameter oscmParam in _oscmParameters)
             {
@@ -57,7 +57,7 @@ namespace OSCmooth.Util
                 {
                     if (_vrcParameterMatch != null && _vrcParameterMatch.name == oscmParam.paramName)
                         _vrcParameters.Remove(_vrcParameterMatch);
-                    if (oscmParam.binaryEncoding)
+                    if (oscmParam.binaryEncoding != OSCmoothParserType.None)
                         AddParameter(oscmParam.paramName,
                                      VRCExpressionParameters.ValueType.Float,
                                      false);
@@ -65,14 +65,14 @@ namespace OSCmooth.Util
 
                     for (int binarySize = 0; binarySize < oscmParam.binarySizeSelection; binarySize++)
                     {
-                        var binaryParameter = _nameParser.Binary(oscmParam.paramName, 1 << binarySize);
+                        var binaryParameter = _nameParser.Binary(oscmParam.paramName, 1 << binarySize, oscmParam.binaryEncoding == OSCmoothParserType.Encoder);
                         AddParameter(binaryParameter,
                                      VRCExpressionParameters.ValueType.Bool,
                                      true);
                     }
                     if (oscmParam.binaryNegative)
                     {
-                        var binaryNegative = _nameParser.BinaryNegative(oscmParam.paramName);
+                        var binaryNegative = _nameParser.BinaryNegative(oscmParam.paramName, oscmParam.binaryEncoding == OSCmoothParserType.Encoder);
                         AddParameter(binaryNegative,
                                      VRCExpressionParameters.ValueType.Bool,
                                      true);

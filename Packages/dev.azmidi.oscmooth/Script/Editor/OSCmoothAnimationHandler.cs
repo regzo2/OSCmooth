@@ -65,7 +65,7 @@ namespace OSCmooth.Editor.Animation
         {
             var _localBehaviors = new List<StateMachineBehaviour>();
             var _remoteBehaviors = new List<StateMachineBehaviour>();   
-            foreach (var p in _setup.parameters.Where(pa => pa.binaryEncoding))
+            foreach (var p in _setup.parameters.Where(pa => pa.binaryEncoding == OSCmoothParserType.Encoder))
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Encoder Layers", 0.0f);
 
@@ -128,15 +128,15 @@ namespace OSCmooth.Editor.Animation
                                            .ToList();
                 _existingParameters = new HashSet<string>(_animatorController.parameters.Select((AnimatorControllerParameter p) => p.name));
                 _exportDirectory = $"{_directory}/Animator_{_animatorGUID}/";
-                _nameParser = new OSCmNameManager(!_setup.useBinaryEncoding);
+                _nameParser = new OSCmNameManager();
 
-				CreateLayer(i == _layers.Length-1);
+				CreateLayer();
 
 				_layers[i].animatorController = _animatorController;
 			}
         }
 
-        public void CreateLayer(bool createEncoders = false)
+        public void CreateLayer()
         {
             AssetDatabase.StartAssetEditing();
 
@@ -148,7 +148,7 @@ namespace OSCmooth.Editor.Animation
 
             List<BlendTree> _locals = new List<BlendTree>();
             List<BlendTree> _remotes = new List<BlendTree>();
-            if (createEncoders)
+            if (_parameters.Any(p => p.binaryEncoding == OSCmoothParserType.Encoder))
                 CreateEncoders(_localState, _remoteState);
             if (_parameters.Any(p => p.binarySizeSelection > 0))
                 _remotes.Add(CreateBinaryDecoderLayer());
@@ -247,7 +247,7 @@ namespace OSCmooth.Editor.Animation
 
             var _childs = new List<ChildMotion>();
 
-            foreach (OSCmoothParameter p in _parameters.Where(oscmP => oscmP.binaryEncoding))
+            foreach (OSCmoothParameter p in _parameters.Where(oscmP => oscmP.binaryEncoding != OSCmoothParserType.None))
             {
                 Debug.Log($"Creating Parameter {p.paramName} Direct Drive.");
                 _animatorController.CreateParameter(_existingParameters, p.paramName, AnimatorControllerParameterType.Float, true);
@@ -652,7 +652,7 @@ namespace OSCmooth.Editor.Animation
                     var _parameter = new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
                     {
                         source = paramName,
-                        name = _nameParser.BinaryNegative(paramName),
+                        name = _nameParser.BinaryNegative(paramName, true),
                         type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Copy,
                         convertRange = true,
                         sourceMin = 0f,
@@ -669,7 +669,7 @@ namespace OSCmooth.Editor.Animation
                 {
                     _paramDriver.parameters.Add(new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
                     {
-                        name = _nameParser.Binary(paramName, 1 << j),
+                        name = _nameParser.Binary(paramName, 1 << j, true),
                         type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
                         value = ((i >> j) & 1) == 1 ? 1f : 0f
                     });
@@ -770,7 +770,7 @@ namespace OSCmooth.Editor.Animation
             var _rootParameter = _nameParser.BlendSet();
             if (combinedParameter)
             {
-                var _binaryNegative = _nameParser.BinaryNegative(paramName);
+                var _binaryNegative = _nameParser.BinaryNegative(paramName, false);
                 _animatorController.CreateParameter(_existingParameters, _binaryNegative, AnimatorControllerParameterType.Float, true);
                 _rootParameter = _binaryNegative;
             }
@@ -882,7 +882,7 @@ namespace OSCmooth.Editor.Animation
         public BlendTree CreateBinaryDecodeTree(string paramName, string directory, int binaryPow, int binarySize, bool negative)
         {
             float binaryPowValue = Mathf.Pow(2, binaryPow);
-            var binaryParameter = _nameParser.Binary(paramName, (int)binaryPowValue);
+            var binaryParameter = _nameParser.Binary(paramName, (int)binaryPowValue, false);
             var binaryProxy = _nameParser.BinaryDriver(paramName);
 
             _animatorController.CreateParameter(_existingParameters, binaryParameter, AnimatorControllerParameterType.Float, true);

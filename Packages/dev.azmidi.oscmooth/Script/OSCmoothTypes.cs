@@ -15,6 +15,13 @@ namespace OSCmooth.Types
         public bool useBinaryDecoding = true;
     }
 
+    public enum OSCmoothParserType
+    {
+        None,
+        Encoder,
+        MultiDriver
+    }
+
     [Serializable]
     public class OSCmoothParameter
     {
@@ -26,7 +33,7 @@ namespace OSCmooth.Types
         public bool convertToProxy = true;
         public int binarySizeSelection = 0;
         public bool binaryNegative = false;
-        public bool binaryEncoding = false;
+        public OSCmoothParserType binaryEncoding = OSCmoothParserType.None;
         public bool isVisible = false;
     }
 

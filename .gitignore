@@ -399,3 +399,4 @@ VRC.Enums*
 /Packages
 *.csproj
 .history
+/UserSettings

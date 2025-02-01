@@ -28,10 +28,8 @@ namespace OSCmooth
         {
             "OSCm/Proxy/", "OSCm_Proxy"
         };
-        public bool _legacy;
-        public OSCmNameManager(bool legacy = false)
+        public OSCmNameManager()
         {
-            _legacy = legacy;
         }
 
         public static string Shuffle(string str)
@@ -43,14 +41,14 @@ namespace OSCmooth
             return new string(list.Values.ToArray());
     }
 
-        public string Binary(string parameter, int step) =>
-              _legacy
-            ? $"{oscmPrefix}{binaryPrefix}{parameter}{step}"
-            : $"{oscmPrefix}{binaryPrefix}{step}/{Shuffle(parameter)}";
-        public string BinaryNegative(string parameter) =>
-            _legacy
-            ? $"{oscmPrefix}{binaryPrefix}{parameter}{binaryNegativeSuffix}"
-            : $"{oscmPrefix}{binaryPrefix}{binaryNegativeSuffix}/{Shuffle(parameter)}";
+        public string Binary(string parameter, int step, bool encoding) =>
+              encoding
+            ? $"{oscmPrefix}{binaryPrefix}{step}/{Shuffle(parameter)}"
+            : $"{oscmPrefix}{binaryPrefix}{parameter}{step}";
+        public string BinaryNegative(string parameter, bool encoding) =>
+            encoding
+            ? $"{oscmPrefix}{binaryPrefix}{binaryNegativeSuffix}/{Shuffle(parameter)}"
+            : $"{oscmPrefix}{binaryPrefix}{parameter}{binaryNegativeSuffix}";
         public string BinaryDriver(string parameter) =>
             $"{oscmPrefix}{binaryPrefix}{proxyPrefix}{parameter}";
         public string Proxy(string parameter) =>

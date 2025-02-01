@@ -7,7 +7,6 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 
 namespace OSCmooth
 {
-    [AddComponentMenu("Azmidi/OSCmooth", 0)]
     public class OSCmoothBehavior : MonoBehaviour, IEditorOnly
     {
         [HideInInspector] public OSCmoothSetup setup;

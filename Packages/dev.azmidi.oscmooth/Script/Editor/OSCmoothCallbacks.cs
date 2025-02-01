@@ -20,7 +20,8 @@ using VRC.SDK3.Builder;
 
 namespace OSCmooth.Editor
 {
-    public class OSCmoothPostprocessor : IVRCSDKPostprocessAvatarCallback, IVRCSDKOrderedCallback, IOrderedCallback
+	/*
+	public class OSCmoothPostprocessor : IVRCSDKPostprocessAvatarCallback, IVRCSDKOrderedCallback, IOrderedCallback
     {
         public int callbackOrder => 0;
 
@@ -38,6 +39,7 @@ namespace OSCmooth.Editor
             }
         }
     }
+	*/
 
 	public class OSCmoothPreprocessor : IVRCSDKPreprocessAvatarCallback
 	{

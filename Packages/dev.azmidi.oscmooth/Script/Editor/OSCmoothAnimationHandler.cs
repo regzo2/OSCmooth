@@ -65,7 +65,7 @@ namespace OSCmooth.Editor.Animation
         {
             var _localBehaviors = new List<StateMachineBehaviour>();
             var _remoteBehaviors = new List<StateMachineBehaviour>();   
-            foreach (var p in _setup.parameters.Where(pa => pa.binaryEncoding == OSCmoothParserType.Encoder))
+            foreach (var p in _setup.parameters.Where(pa => pa.binaryEncoding == OSCmoothParserType.Encoder && pa.binarySizeSelection > 0))
             {
                 EditorUtility.DisplayProgressBar("OSCmooth", "Creating Encoder Layers", 0.0f);
 
